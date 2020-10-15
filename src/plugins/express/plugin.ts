@@ -1,4 +1,5 @@
 import { IPlugin, PluginFeature } from '@bettercorp/service-base/lib/ILib';
+import { Tools } from '@bettercorp/tools/lib/Tools';
 import { IWebServerConfig, IWebServerInitPlugin } from './config';
 import * as EXPRESS from 'express';
 import { Express } from 'express';
@@ -26,7 +27,10 @@ export class Plugin implements IPlugin {
   initForPlugins<T1 = IWebServerInitPlugin, T2 = void> (initType: string, args: T1): Promise<T2> {
     return new Promise((resolve, reject) => {
       let argsAs = args as unknown as IWebServerInitPlugin;
-      (this.Express as any)[initType](argsAs.arg1, argsAs.arg2);
+      if (Tools.isNullOrUndefined(argsAs.arg2))
+        (this.Express as any)[initType](argsAs.arg1);
+      else
+        (this.Express as any)[initType](argsAs.arg1, argsAs.arg2);
       resolve();
     });
   }
