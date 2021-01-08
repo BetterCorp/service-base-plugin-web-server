@@ -46,7 +46,7 @@ export class Plugin implements IPlugin {
         }
 
         const bearerToken = `${argsForExpressReq.req.headers.authorization}`.split(' ')[1];
-        jsonwebtoken.verify(bearerToken, self.getJWTKey as any, self.FEATURES.getPluginConfig().config, (err: any, decoded: any) => {
+        jsonwebtoken.verify(bearerToken, (a, b) => { self.getJWTKey(a, b); }, self.FEATURES.getPluginConfig().config, (err: any, decoded: any) => {
           if (err) {
             self.FEATURES.log.warn('*authorization: failed error');
             self.FEATURES.log.error(err);
@@ -64,7 +64,7 @@ export class Plugin implements IPlugin {
           return resolve(false as any);
 
         const bearerToken = decodeURIComponent(`${argsForExpressReq.req.query.passtk}`);
-        jsonwebtoken.verify(bearerToken, self.getJWTKey as any, self.FEATURES.getPluginConfig().config, (err: any, decoded: any) => {
+        jsonwebtoken.verify(bearerToken, (a, b) => { self.getJWTKey(a, b); }, self.FEATURES.getPluginConfig().config, (err: any, decoded: any) => {
           if (err) {
             self.FEATURES.log.error(err);
             resolve(false as any);
