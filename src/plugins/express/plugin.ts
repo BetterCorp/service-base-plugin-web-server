@@ -11,7 +11,7 @@ export class Plugin implements IPlugin {
     const self = this;
     return new Promise((resolve) => {
       self.Express = EXPRESS();
-      features.log.info(`Server ready on port ${features.getPluginConfig<IWebServerConfig>().port || 80}`);
+      features.log.info(`Server ready to listen port ${features.getPluginConfig<IWebServerConfig>().port || 80}`);
       resolve();
     });
   }
@@ -20,7 +20,7 @@ export class Plugin implements IPlugin {
     const self = this;
     return new Promise((resolve, reject) => {
       self.Express.listen(features.getPluginConfig<IWebServerConfig>().port || 80, '0.0.0.0', () => console.log(`Listening on port ${features.getPluginConfig<IWebServerConfig>().port || 80} for WW!`));
-      features.log.info(`Server started on port ${features.getPluginConfig<IWebServerConfig>().port || 80}`);
+      features.log.info(`Server listening on port ${features.getPluginConfig<IWebServerConfig>().port || 80}`);
       resolve();
     });
   }
@@ -31,7 +31,7 @@ export class Plugin implements IPlugin {
         (this.Express as any)[initType](argsAs.arg1);
       else
         (this.Express as any)[initType](argsAs.arg1, argsAs.arg2);
-      resolve();
+      (resolve as any)();
     });
   }
 }
