@@ -30,8 +30,8 @@ export class Plugin implements IPlugin {
   initForPlugins<T1 = IWebServerInitPlugin, T2 = void> (initType: string, args: T1): Promise<T2> {
     const self = this;
     return new Promise((resolve) => {
-      self.Features.log.debug(`initForPlugins [${initType}]`);
       let argsAs = args as unknown as IWebServerInitPlugin;
+      self.Features.log.debug(`initForPlugins [${initType}] ${argsAs.arg1}`);
       if (Tools.isNullOrUndefined(argsAs.arg2))
         (this.Express as any)[initType](argsAs.arg1);
       else
