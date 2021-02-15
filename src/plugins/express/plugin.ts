@@ -3,7 +3,6 @@ import { Tools } from '@bettercorp/tools/lib/Tools';
 import { IWebServerConfig, IWebServerInitPlugin } from './config';
 import * as EXPRESS from 'express';
 import { Express } from 'express';
-import { features } from 'process';
 
 export class Plugin implements IPlugin {
   private Express!: Express;
