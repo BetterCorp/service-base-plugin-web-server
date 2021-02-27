@@ -9,14 +9,13 @@
     "start": "node lib/index.js",
     "build": "tsc",
     "deploy": "npm publish",
-    "xpostinstall": "node ../service-base/install-plugin.js"
   },
   "files": [
     "lib/**/*",
     "installer.js"
   ],
   "main": "lib/index.js",
-  "version": "1.0.10",
+  "version": "1.0.11",
   "dependencies": {
     "@bettercorp/service-base": "^4.0.0",
     "@bettercorp/tools": "^1.0.6",
