@@ -8,6 +8,7 @@ export interface IExpressJWTInit {
 }
 import * as jsonwebtoken from 'jsonwebtoken';
 import * as jwksClient from 'jwks-rsa';
+import { ExpressJWTEvents } from '../../lib';
 
 export class Plugin implements IPlugin {
   private JWTClient!: jwksClient.JwksClient;
@@ -30,6 +31,16 @@ export class Plugin implements IPlugin {
     return new Promise((resolve) => {
       self.JWTClient = jwksClient({
         jwksUri: features.getPluginConfig().keyUrl
+      });
+      features.onReturnableEvent(null, ExpressJWTEvents.validateToken, (resolve, reject, data) => {
+        jsonwebtoken.verify(data, (a, b) => { self.getJWTKey(a, b); }, self.FEATURES.getPluginConfig().config, (err: any, decoded: any) => {
+          if (err) {
+            self.FEATURES.log.warn('*authorization: failed error');
+            self.FEATURES.log.error(err);
+            return resolve(false as any);
+          }
+          resolve(decoded);
+        });
       });
       features.log.info(`JWT Ready with pub keys: ${features.getPluginConfig().keyUrl}`);
       resolve();
