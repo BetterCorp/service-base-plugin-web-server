@@ -11,14 +11,14 @@ export class Plugin implements IPlugin {
   private HTTPExpress!: Express;
   private HTTPSExpress!: Express;
   private Features!: PluginFeature;
-  initIndex: number = -999999;
+  static initIndex: number = -999999;
   init(features: PluginFeature): Promise<void> {
     const self = this;
     return new Promise((resolve) => {
       self.Features = features;
       if (features.getPluginConfig<IWebServerConfig>().http) {
         self.HTTPExpress = EXPRESS();
-        if (features.getPluginConfig<IWebServerConfig>().httpAutoRedirect === true) {
+        if (features.getPluginConfig<IWebServerConfig>().httpAutoRedirect === true && features.getPluginConfig<IWebServerConfig>().https) {
           self.HTTPExpress.use((req: any, res: any) => {
             res.redirect(301, `https://${ req.hostname }:${ features.getPluginConfig<IWebServerConfig>().httpsPort }${ req.originalUrl }`);
           });
@@ -33,7 +33,7 @@ export class Plugin implements IPlugin {
       resolve();
     });
   }
-  loadedIndex: number = 999999;
+  static loadedIndex: number = 999999;
   loaded(features: PluginFeature): Promise<void> {
     const self = this;
     return new Promise((resolve) => {
