@@ -13,7 +13,7 @@ import { ExpressJWTEvents } from '../../lib';
 export class Plugin implements IPlugin {
   private JWTClient!: jwksClient.JwksClient;
   private FEATURES!: PluginFeature;
-  getJWTKey (header: any, callback: Function) {
+  getJWTKey(header: any, callback: Function) {
     this.JWTClient.getSigningKey(header.kid, function (err: any, key: any) {
       try {
         var signingKey = key.publicKey || key.rsaPublicKey;
@@ -25,7 +25,7 @@ export class Plugin implements IPlugin {
   }
 
   initIndex: number = -999998;
-  init (features: PluginFeature): Promise<void> {
+  init(features: PluginFeature): Promise<void> {
     const self = this;
     self.FEATURES = features;
     return new Promise((resolve) => {
@@ -42,21 +42,25 @@ export class Plugin implements IPlugin {
           resolve(decoded);
         });
       });
-      features.log.info(`JWT Ready with pub keys: ${features.getPluginConfig().keyUrl}`);
+      features.log.info(`JWT Ready with pub keys: ${ features.getPluginConfig().keyUrl }`);
       resolve();
     });
   }
-  initForPlugins<T1 = IExpressJWTInit, T2 = boolean | any> (initType: string, args: T1): Promise<T2> {
+  initForPlugins<T1 = IExpressJWTInit, T2 = boolean | any>(initType: string, args: T1): Promise<T2> {
     const self = this;
     return new Promise((resolve, reject) => {
-      if (initType == 'REQ') {
+      if (initType == 'REQ' || initType == 'REQQUERY') {
         const argsForExpressReq = args as unknown as IExpressJWTInit;
-        if (`${argsForExpressReq.req.headers.authorization}`.indexOf('Bearer ') !== 0) {
+        if (`${ argsForExpressReq.req.headers.authorization }`.indexOf('Bearer ') !== 0) {
+          if (initType == 'REQQUERY') {
+            self.FEATURES.log.warn('*authorization: failed no header: trying querystring');
+            return self.initForPlugins<T1, T2>('QUERY', args).then(resolve).catch(reject);
+          }
           self.FEATURES.log.warn('*authorization: failed no header');
           return resolve(false as any);
         }
 
-        const bearerToken = `${argsForExpressReq.req.headers.authorization}`.split(' ')[1];
+        const bearerToken = `${ argsForExpressReq.req.headers.authorization }`.split(' ')[1];
         jsonwebtoken.verify(bearerToken, (a, b) => { self.getJWTKey(a, b); }, self.FEATURES.getPluginConfig().config, (err: any, decoded: any) => {
           if (err) {
             self.FEATURES.log.warn('*authorization: failed error');
@@ -74,7 +78,7 @@ export class Plugin implements IPlugin {
         if (Tools.isNullOrUndefined(argsForExpressReq.req.query.passtk))
           return resolve(false as any);
 
-        const bearerToken = decodeURIComponent(`${argsForExpressReq.req.query.passtk}`);
+        const bearerToken = decodeURIComponent(`${ argsForExpressReq.req.query.passtk }`);
         jsonwebtoken.verify(bearerToken, (a, b) => { self.getJWTKey(a, b); }, self.FEATURES.getPluginConfig().config, (err: any, decoded: any) => {
           if (err) {
             self.FEATURES.log.error(err);
@@ -85,7 +89,7 @@ export class Plugin implements IPlugin {
         });
         return;
       }
-      return reject(`Unknown Init (${initType})`);
+      return reject(`Unknown Init (${ initType })`);
     });
   }
 }
