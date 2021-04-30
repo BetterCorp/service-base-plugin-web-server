@@ -11,7 +11,7 @@ export class Plugin implements IPlugin {
   private HTTPExpress!: Express;
   private HTTPSExpress!: Express;
   private Features!: PluginFeature;
-  static initIndex: number = -999999;
+  public readonly initIndex: number = -999998;
   init(features: PluginFeature): Promise<void> {
     const self = this;
     return new Promise((resolve) => {
@@ -33,7 +33,7 @@ export class Plugin implements IPlugin {
       resolve();
     });
   }
-  static loadedIndex: number = 999999;
+  public readonly loadedIndex: number = 999999;
   loaded(features: PluginFeature): Promise<void> {
     const self = this;
     return new Promise((resolve) => {

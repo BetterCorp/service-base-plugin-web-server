@@ -24,7 +24,7 @@ export class Plugin implements IPlugin {
     });
   }
 
-  initIndex: number = -999998;
+  public readonly initIndex: number = -999997;
   init(features: PluginFeature): Promise<void> {
     const self = this;
     self.FEATURES = features;
