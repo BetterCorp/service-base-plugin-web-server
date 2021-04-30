@@ -67,24 +67,31 @@ export class Plugin implements IPlugin {
             self.FEATURES.log.error(err);
             return resolve(false as any);
           }
+          self.FEATURES.log.warn('*authorization: authed as: ' + decoded.sub);
           resolve(decoded);
         });
         return;
       }
       if (initType == 'QUERY') {
         const argsForExpressReq = args as unknown as IExpressJWTInit;
-        if (Tools.isNullOrUndefined(argsForExpressReq.req.query))
+        if (Tools.isNullOrUndefined(argsForExpressReq.req.query)) {
+          self.FEATURES.log.warn('*authorization: failed no query passtk');
           return resolve(false as any);
-        if (Tools.isNullOrUndefined(argsForExpressReq.req.query.passtk))
+        }
+        if (Tools.isNullOrUndefined(argsForExpressReq.req.query.passtk)) {
+          self.FEATURES.log.warn('*authorization: failed no query passtk');
           return resolve(false as any);
+        }
 
         const bearerToken = decodeURIComponent(`${ argsForExpressReq.req.query.passtk }`);
         jsonwebtoken.verify(bearerToken, (a, b) => { self.getJWTKey(a, b); }, self.FEATURES.getPluginConfig().config, (err: any, decoded: any) => {
           if (err) {
+            self.FEATURES.log.warn('*authorization: failed error');
             self.FEATURES.log.error(err);
             resolve(false as any);
             return;
           }
+          self.FEATURES.log.warn('*authorization: authed as: ' + decoded.sub);
           resolve(decoded);
         });
         return;
