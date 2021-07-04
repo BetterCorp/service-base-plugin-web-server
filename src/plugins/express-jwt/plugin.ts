@@ -39,7 +39,10 @@ export class Plugin implements IPlugin {
             self.FEATURES.log.error(err);
             return resolve(false as any);
           }
-          resolve(decoded);
+          resolve({
+            ...decoded,
+            _from: 'token'
+          });
         });
       });
       features.log.info(`JWT Ready with pub keys: ${ features.getPluginConfig().keyUrl }`);
@@ -68,7 +71,10 @@ export class Plugin implements IPlugin {
             return resolve(false as any);
           }
           self.FEATURES.log.warn('*authorization: authed as: ' + decoded.sub);
-          resolve(decoded);
+          resolve({
+            ...decoded,
+            _from: 'bearer'
+          });
         });
         return;
       }
@@ -92,7 +98,10 @@ export class Plugin implements IPlugin {
             return;
           }
           self.FEATURES.log.warn('*authorization: authed as: ' + decoded.sub);
-          resolve(decoded);
+          resolve({
+            ...decoded,
+            _from: 'query'
+          });
         });
         return;
       }
