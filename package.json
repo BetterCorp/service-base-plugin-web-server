@@ -5,22 +5,18 @@
     "url": "https://gitlab.com/BetterCorp/public/service-base-plugin-webserver"
   },
   "scripts": {
-    "dev": "nodemon -L --watch src/**/*.ts --watch plugins/**/*.ts --exec ts-node src/index.ts",
-    "start": "node lib/index.js",
     "build": "tsc",
-    "deploy": "npm publish",
     "version": "node ./node_modules/@bettercorp/service-base/build/version.js $0"
   },
   "files": [
-    "lib/**/*",
-    "installer.js"
+    "lib/**/*"
   ],
   "main": "lib/index.js",
   "version": "1.0.18",
   "dependencies": {
-    "@bettercorp/service-base": "^4.1.20210611133014",
-    "@bettercorp/tools": "^1.1.20210611125606",
-    "@types/node": "^14.17.5",
+    "@bettercorp/service-base": "^5.0.20210631111834-featurev5",
+    "@bettercorp/tools": "^1.1.20210611181403",
+    "@types/node": "^14.17.6",
     "express": "^4.17.1",
     "express-fileupload": "^1.2.1",
     "jsonwebtoken": "^8.5.1",
