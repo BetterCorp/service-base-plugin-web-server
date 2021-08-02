@@ -19,7 +19,20 @@ export enum EJWTTokenType {
 export class expressJwt extends CPluginClient<IEJWTPluginConfig> {
   public readonly _pluginName: string = "expressJwt";
 
-  async expressVerify (req: Request, res: Response, tokenType: EJWTTokenType = EJWTTokenType.req): Promise<any> {
+  async expressVerify(req: Request, res: Response, tokenType: EJWTTokenType = EJWTTokenType.req): Promise<any> {
+    const self = this;
+    return new Promise((resolve, reject) => {
+      self.expressVerifyQuiet(req, res, tokenType).then(x => {
+        if (x === false) {
+          res.status(403).send('Forbidden');
+          return reject();
+        }
+        resolve(x);
+      });
+    });
+  }
+
+  async expressVerifyQuiet(req: Request, res: Response, tokenType: EJWTTokenType = EJWTTokenType.req): Promise<any> {
     const self = this;
     return new Promise((resolve, reject) => {
       let foundToken: string | null = null;
@@ -40,15 +53,13 @@ export class expressJwt extends CPluginClient<IEJWTPluginConfig> {
 
       if (Tools.isNullOrUndefined(foundToken) || foundToken == "") {
         self.refPlugin.log.warn('*authorization: failed no token');
-        res.status(403).send('Forbidden');
-        return reject();
+        return resolve(false);
       }
 
-      self.emitEventAndReturn(`${ExpressJWTEvents.validateToken}-${self.getPluginConfig().authKey}`, foundToken).then(resolve).catch(() => {
+      self.emitEventAndReturn(`${ ExpressJWTEvents.validateToken }-${ self.getPluginConfig().authKey }`, foundToken).then(resolve).catch(() => {
         self.refPlugin.log.warn('*authorization: failed');
-        res.status(403).send('Forbidden');
-        return reject();
-      })
+        return resolve(false);
+      });
     });
   }
 }
@@ -73,13 +84,13 @@ export class Plugin extends CPlugin<IEJWTPluginConfig>{
       self.JWTClient = jwksClient({
         jwksUri: self.getPluginConfig().keyUrl
       });
-      self.onReturnableEvent(null, `${ExpressJWTEvents.validateToken}-${self.getPluginConfig().authKey}`, self.validateToken);
-      self.log.info(`JWT Ready with pub keys: ${ self.getPluginConfig().keyUrl } and related auth: ${self.getPluginConfig().authKey}`);
+      self.onReturnableEvent(null, `${ ExpressJWTEvents.validateToken }-${ self.getPluginConfig().authKey }`, self.validateToken);
+      self.log.info(`JWT Ready with pub keys: ${ self.getPluginConfig().keyUrl } and related auth: ${ self.getPluginConfig().authKey }`);
       resolve();
     });
   }
 
-  validateToken (resolve: any, reject: any, data: string) {
+  validateToken(resolve: any, reject: any, data: string) {
     const self = this;
     jsonwebtoken.verify(data, (a, b) => { self.getJWTKey(a, b); }, self.getPluginConfig().options, (err: any, decoded: any) => {
       if (err) {
