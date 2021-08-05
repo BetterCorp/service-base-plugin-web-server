@@ -38,9 +38,9 @@ export class expressJwt extends CPluginClient<IEJWTPluginConfig> {
       let foundToken: string | null = null;
       if (tokenType === EJWTTokenType.req || tokenType === EJWTTokenType.reqOrQuery) {
         if (`${ req.headers.authorization }`.indexOf('Bearer ') === 0) {
-          self.refPlugin.log.warn('*authorization: no header');
-        } else {
           foundToken = `${ req.headers.authorization }`.split(' ')[1];
+        } else {
+          self.refPlugin.log.warn('*authorization: no header');
         }
       }
       if (foundToken === null && (tokenType === EJWTTokenType.query || tokenType === EJWTTokenType.reqOrQuery)) {
