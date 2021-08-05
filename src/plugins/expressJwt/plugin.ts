@@ -62,6 +62,10 @@ export class expressJwt extends CPluginClient<IEJWTPluginConfig> {
       });
     });
   }
+
+  async validateToken(token: string): Promise<any> {
+    return this.emitEventAndReturn(`${ ExpressJWTEvents.validateToken }-${ this.getPluginConfig().authKey }`, token);
+  }
 }
 
 export class Plugin extends CPlugin<IEJWTPluginConfig>{
