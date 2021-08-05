@@ -14,9 +14,9 @@
   "main": "lib/index.js",
   "version": "1.0.20210701093948",
   "dependencies": {
-    "@bettercorp/service-base": "^5.1.20210701165109",
+    "@bettercorp/service-base": "^5.1.20210704234742",
     "@bettercorp/tools": "^1.1.20210611181403",
-    "@types/node": "^14.17.7",
+    "@types/node": "^14.17.9",
     "express": "^4.17.1",
     "express-fileupload": "^1.2.1",
     "jsonwebtoken": "^8.5.1",
