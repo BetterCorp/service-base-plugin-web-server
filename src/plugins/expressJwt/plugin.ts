@@ -88,7 +88,7 @@ export class Plugin extends CPlugin<IEJWTPluginConfig>{
       self.JWTClient = jwksClient({
         jwksUri: self.getPluginConfig().keyUrl
       });
-      self.onReturnableEvent(null, `${ ExpressJWTEvents.validateToken }-${ self.getPluginConfig().authKey }`, self.validateToken);
+      self.onReturnableEvent(null, `${ ExpressJWTEvents.validateToken }-${ self.getPluginConfig().authKey }`, (a, b, c) => self.validateToken(a, b, c));
       self.log.info(`JWT Ready with pub keys: ${ self.getPluginConfig().keyUrl } and related auth: ${ self.getPluginConfig().authKey }`);
       resolve();
     });
