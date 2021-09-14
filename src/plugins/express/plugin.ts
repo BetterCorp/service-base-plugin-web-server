@@ -5,6 +5,7 @@ import { Express } from 'express';
 import * as http from 'http';
 import * as https from 'https';
 import { readFileSync } from 'fs';
+import { hostname } from 'os';
 
 export class Plugin extends CPlugin<IWebServerConfig> {
   private HTTPExpress!: Express;
@@ -21,14 +22,14 @@ export class Plugin extends CPlugin<IWebServerConfig> {
         self.HTTPSExpress = EXPRESS();
         self.log.info(`[HTTPS] Server ready: ${ self.getPluginConfig().host }:${ self.getPluginConfig().httpsPort }`);
       }
-      self.use((req: any, res: any, next: any) => {
-        if (req.method !== 'GET' && req.path !== '/BSB/Ping') return next();
+      self.options('/BSB/Ping', (req: any, res: any) => {
         res.setHeader('Content-Type', 'application/json');
         res.send({
           time: new Date().getTime(),
-          alive: true
+          alive: true,
+          clusterId: hostname()
         });
-      })
+      });
       resolve();
     });
   }
@@ -90,7 +91,7 @@ export class Plugin extends CPlugin<IWebServerConfig> {
     const self = this;
     return new Promise((resolve) => {
       let server = self.getServerToListenTo();
-      self.log.debug(`[${ server.type }] initForPlugins [HEAD]${path}`);
+      self.log.debug(`[${ server.type }] initForPlugins [HEAD]${ path }`);
       server.server.head(path, handlers);
       self.log.debug(`[${ server.type }] initForPlugins [HEAD] OKAY`);
       resolve();
@@ -100,7 +101,7 @@ export class Plugin extends CPlugin<IWebServerConfig> {
     const self = this;
     return new Promise((resolve) => {
       let server = self.getServerToListenTo();
-      self.log.debug(`[${ server.type }] initForPlugins [GET]${path}`);
+      self.log.debug(`[${ server.type }] initForPlugins [GET]${ path }`);
       server.server.get(path, handlers);
       self.log.debug(`[${ server.type }] initForPlugins [GET] OKAY`);
       resolve();
@@ -110,7 +111,7 @@ export class Plugin extends CPlugin<IWebServerConfig> {
     const self = this;
     return new Promise((resolve) => {
       let server = self.getServerToListenTo();
-      self.log.debug(`[${ server.type }] initForPlugins [POST]${path}`);
+      self.log.debug(`[${ server.type }] initForPlugins [POST]${ path }`);
       server.server.post(path, handlers);
       self.log.debug(`[${ server.type }] initForPlugins [POST] OKAY`);
       resolve();
@@ -120,7 +121,7 @@ export class Plugin extends CPlugin<IWebServerConfig> {
     const self = this;
     return new Promise((resolve) => {
       let server = self.getServerToListenTo();
-      self.log.debug(`[${ server.type }] initForPlugins [PUT]${path}`);
+      self.log.debug(`[${ server.type }] initForPlugins [PUT]${ path }`);
       server.server.put(path, handlers);
       self.log.debug(`[${ server.type }] initForPlugins [PUT] OKAY`);
       resolve();
@@ -130,7 +131,7 @@ export class Plugin extends CPlugin<IWebServerConfig> {
     const self = this;
     return new Promise((resolve) => {
       let server = self.getServerToListenTo();
-      self.log.debug(`[${ server.type }] initForPlugins [DELETE]${path}`);
+      self.log.debug(`[${ server.type }] initForPlugins [DELETE]${ path }`);
       server.server.delete(path, handlers);
       self.log.debug(`[${ server.type }] initForPlugins [DELETE] OKAY`);
       resolve();
@@ -140,7 +141,7 @@ export class Plugin extends CPlugin<IWebServerConfig> {
     const self = this;
     return new Promise((resolve) => {
       let server = self.getServerToListenTo();
-      self.log.debug(`[${ server.type }] initForPlugins [PATCH]${path}`);
+      self.log.debug(`[${ server.type }] initForPlugins [PATCH]${ path }`);
       server.server.patch(path, handlers);
       self.log.debug(`[${ server.type }] initForPlugins [PATCH] OKAY`);
       resolve();
@@ -150,7 +151,7 @@ export class Plugin extends CPlugin<IWebServerConfig> {
     const self = this;
     return new Promise((resolve) => {
       let server = self.getServerToListenTo();
-      self.log.debug(`[${ server.type }] initForPlugins [OPTIONS]${path}`);
+      self.log.debug(`[${ server.type }] initForPlugins [OPTIONS]${ path }`);
       server.server.options(path, handlers);
       self.log.debug(`[${ server.type }] initForPlugins [OPTIONS] OKAY`);
       resolve();
@@ -160,7 +161,7 @@ export class Plugin extends CPlugin<IWebServerConfig> {
     const self = this;
     return new Promise((resolve) => {
       let server = self.getServerToListenTo();
-      self.log.debug(`[${ server.type }] initForPlugins [ALL]${path}`);
+      self.log.debug(`[${ server.type }] initForPlugins [ALL]${ path }`);
       server.server.all(path, handlers);
       self.log.debug(`[${ server.type }] initForPlugins [ALL] OKAY`);
       resolve();
@@ -182,7 +183,7 @@ export class Plugin extends CPlugin<IWebServerConfig> {
     const self = this;
     return new Promise((resolve) => {
       let server = self.getServerToListenTo();
-      self.log.debug(`[${ server.type }] initForPlugins [HEAD]${path}`);
+      self.log.debug(`[${ server.type }] initForPlugins [HEAD]${ path }`);
       server.server.head(path, handlers);
       self.log.debug(`[${ server.type }] initForPlugins [HEAD] OKAY`);
       resolve();
@@ -192,7 +193,7 @@ export class Plugin extends CPlugin<IWebServerConfig> {
     const self = this;
     return new Promise((resolve, reject) => {
       if (self.getPluginConfig().server === IWebServerConfigServer.https) return reject('HTTP NOT ENABLED');
-      self.log.debug(`[HTTP_ONLY] initForPlugins [GET]${path}`);
+      self.log.debug(`[HTTP_ONLY] initForPlugins [GET]${ path }`);
       self.HTTPExpress.get(path, handlers);
       self.log.debug(`[HTTP_ONLY] initForPlugins [GET] OKAY`);
       resolve();
@@ -202,7 +203,7 @@ export class Plugin extends CPlugin<IWebServerConfig> {
     const self = this;
     return new Promise((resolve, reject) => {
       if (self.getPluginConfig().server === IWebServerConfigServer.https) return reject('HTTP NOT ENABLED');
-      self.log.debug(`[HTTP_ONLY] initForPlugins [POST]${path}`);
+      self.log.debug(`[HTTP_ONLY] initForPlugins [POST]${ path }`);
       self.HTTPExpress.post(path, handlers);
       self.log.debug(`[HTTP_ONLY] initForPlugins [POST] OKAY`);
       resolve();
@@ -212,7 +213,7 @@ export class Plugin extends CPlugin<IWebServerConfig> {
     const self = this;
     return new Promise((resolve, reject) => {
       if (self.getPluginConfig().server === IWebServerConfigServer.https) return reject('HTTP NOT ENABLED');
-      self.log.debug(`[HTTP_ONLY] initForPlugins [PUT]${path}`);
+      self.log.debug(`[HTTP_ONLY] initForPlugins [PUT]${ path }`);
       self.HTTPExpress.put(path, handlers);
       self.log.debug(`[HTTP_ONLY] initForPlugins [PUT] OKAY`);
       resolve();
@@ -222,7 +223,7 @@ export class Plugin extends CPlugin<IWebServerConfig> {
     const self = this;
     return new Promise((resolve, reject) => {
       if (self.getPluginConfig().server === IWebServerConfigServer.https) return reject('HTTP NOT ENABLED');
-      self.log.debug(`[HTTP_ONLY] initForPlugins [DELETE]${path}`);
+      self.log.debug(`[HTTP_ONLY] initForPlugins [DELETE]${ path }`);
       self.HTTPExpress.delete(path, handlers);
       self.log.debug(`[HTTP_ONLY] initForPlugins [DELETE] OKAY`);
       resolve();
@@ -232,7 +233,7 @@ export class Plugin extends CPlugin<IWebServerConfig> {
     const self = this;
     return new Promise((resolve, reject) => {
       if (self.getPluginConfig().server === IWebServerConfigServer.https) return reject('HTTP NOT ENABLED');
-      self.log.debug(`[HTTP_ONLY] initForPlugins [PATCH]${path}`);
+      self.log.debug(`[HTTP_ONLY] initForPlugins [PATCH]${ path }`);
       self.HTTPExpress.patch(path, handlers);
       self.log.debug(`[HTTP_ONLY] initForPlugins [PATCH] OKAY`);
       resolve();
@@ -242,7 +243,7 @@ export class Plugin extends CPlugin<IWebServerConfig> {
     const self = this;
     return new Promise((resolve, reject) => {
       if (self.getPluginConfig().server === IWebServerConfigServer.https) return reject('HTTP NOT ENABLED');
-      self.log.debug(`[HTTP_ONLY] initForPlugins [OPTIONS]${path}`);
+      self.log.debug(`[HTTP_ONLY] initForPlugins [OPTIONS]${ path }`);
       self.HTTPExpress.options(path, handlers);
       self.log.debug(`[HTTP_ONLY] initForPlugins [OPTIONS] OKAY`);
       resolve();
@@ -252,7 +253,7 @@ export class Plugin extends CPlugin<IWebServerConfig> {
     const self = this;
     return new Promise((resolve, reject) => {
       if (self.getPluginConfig().server === IWebServerConfigServer.https) return reject('HTTP NOT ENABLED');
-      self.log.debug(`[HTTP_ONLY] initForPlugins [ALL]${path}`);
+      self.log.debug(`[HTTP_ONLY] initForPlugins [ALL]${ path }`);
       self.HTTPExpress.all(path, handlers);
       self.log.debug(`[HTTP_ONLY] initForPlugins [ALL] OKAY`);
       resolve();
@@ -274,7 +275,7 @@ export class Plugin extends CPlugin<IWebServerConfig> {
     const self = this;
     return new Promise((resolve, reject) => {
       if (self.getPluginConfig().server === IWebServerConfigServer.http) return reject('HTTPS NOT ENABLED');
-      self.log.debug(`[HTTPS_ONLY] initForPlugins [HEAD]${path}`);
+      self.log.debug(`[HTTPS_ONLY] initForPlugins [HEAD]${ path }`);
       self.HTTPSExpress.head(path, handlers);
       self.log.debug(`[HTTPS_ONLY] initForPlugins [HEAD] OKAY`);
       resolve();
@@ -284,7 +285,7 @@ export class Plugin extends CPlugin<IWebServerConfig> {
     const self = this;
     return new Promise((resolve, reject) => {
       if (self.getPluginConfig().server === IWebServerConfigServer.http) return reject('HTTPS NOT ENABLED');
-      self.log.debug(`[HTTPS_ONLY] initForPlugins [GET]${path}`);
+      self.log.debug(`[HTTPS_ONLY] initForPlugins [GET]${ path }`);
       self.HTTPSExpress.get(path, handlers);
       self.log.debug(`[HTTPS_ONLY] initForPlugins [GET] OKAY`);
       resolve();
@@ -294,7 +295,7 @@ export class Plugin extends CPlugin<IWebServerConfig> {
     const self = this;
     return new Promise((resolve, reject) => {
       if (self.getPluginConfig().server === IWebServerConfigServer.http) return reject('HTTPS NOT ENABLED');
-      self.log.debug(`[HTTPS_ONLY] initForPlugins [POST]${path}`);
+      self.log.debug(`[HTTPS_ONLY] initForPlugins [POST]${ path }`);
       self.HTTPSExpress.post(path, handlers);
       self.log.debug(`[HTTPS_ONLY] initForPlugins [POST] OKAY`);
       resolve();
@@ -304,7 +305,7 @@ export class Plugin extends CPlugin<IWebServerConfig> {
     const self = this;
     return new Promise((resolve, reject) => {
       if (self.getPluginConfig().server === IWebServerConfigServer.http) return reject('HTTPS NOT ENABLED');
-      self.log.debug(`[HTTPS_ONLY] initForPlugins [PUT]${path}`);
+      self.log.debug(`[HTTPS_ONLY] initForPlugins [PUT]${ path }`);
       self.HTTPSExpress.put(path, handlers);
       self.log.debug(`[HTTPS_ONLY] initForPlugins [PUT] OKAY`);
       resolve();
@@ -314,7 +315,7 @@ export class Plugin extends CPlugin<IWebServerConfig> {
     const self = this;
     return new Promise((resolve, reject) => {
       if (self.getPluginConfig().server === IWebServerConfigServer.http) return reject('HTTPS NOT ENABLED');
-      self.log.debug(`[HTTPS_ONLY] initForPlugins [DELETE]${path}`);
+      self.log.debug(`[HTTPS_ONLY] initForPlugins [DELETE]${ path }`);
       self.HTTPSExpress.delete(path, handlers);
       self.log.debug(`[HTTPS_ONLY] initForPlugins [DELETE] OKAY`);
       resolve();
@@ -324,7 +325,7 @@ export class Plugin extends CPlugin<IWebServerConfig> {
     const self = this;
     return new Promise((resolve, reject) => {
       if (self.getPluginConfig().server === IWebServerConfigServer.http) return reject('HTTPS NOT ENABLED');
-      self.log.debug(`[HTTPS_ONLY] initForPlugins [PATCH]${path}`);
+      self.log.debug(`[HTTPS_ONLY] initForPlugins [PATCH]${ path }`);
       self.HTTPSExpress.patch(path, handlers);
       self.log.debug(`[HTTPS_ONLY] initForPlugins [PATCH] OKAY`);
       resolve();
@@ -334,7 +335,7 @@ export class Plugin extends CPlugin<IWebServerConfig> {
     const self = this;
     return new Promise((resolve, reject) => {
       if (self.getPluginConfig().server === IWebServerConfigServer.http) return reject('HTTPS NOT ENABLED');
-      self.log.debug(`[HTTPS_ONLY] initForPlugins [OPTIONS]${path}`);
+      self.log.debug(`[HTTPS_ONLY] initForPlugins [OPTIONS]${ path }`);
       self.HTTPSExpress.options(path, handlers);
       self.log.debug(`[HTTPS_ONLY] initForPlugins [OPTIONS] OKAY`);
       resolve();
@@ -344,7 +345,7 @@ export class Plugin extends CPlugin<IWebServerConfig> {
     const self = this;
     return new Promise((resolve, reject) => {
       if (self.getPluginConfig().server === IWebServerConfigServer.http) return reject('HTTPS NOT ENABLED');
-      self.log.debug(`[HTTPS_ONLY] initForPlugins [ALL]${path}`);
+      self.log.debug(`[HTTPS_ONLY] initForPlugins [ALL]${ path }`);
       self.HTTPSExpress.all(path, handlers);
       self.log.debug(`[HTTPS_ONLY] initForPlugins [ALL] OKAY`);
       resolve();

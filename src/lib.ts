@@ -1,3 +1,3 @@
-export enum ExpressJWTEvents {
+export enum WebJWTEvents {
   validateToken = 'validate-token'
 }

@@ -1,9 +1,15 @@
 import { CPlugin } from '@bettercorp/service-base/lib/ILib';
-import { IWebServerConfig, IWebServerConfigServer, IWebServerListenerHelper } from './lib';
+import { FastifyRequestInterface, IWebServerConfig, IWebServerConfigServer, IWebServerListenerHelper } from './lib';
 //import fastify from 'fastify';
 import { readFileSync } from 'fs';
-import { fastify, FastifyInstance, FastifyPluginAsync, FastifyPluginCallback, FastifyPluginOptions, FastifyRegisterOptions, FastifyReply, FastifyRequest, RouteHandlerMethod } from 'fastify';
+import {
+  ContextConfigDefault, fastify, FastifyInstance, FastifyPluginAsync, FastifyPluginCallback, FastifyPluginOptions,
+  FastifyRegisterOptions, FastifyReply, FastifyRequest, RawReplyDefaultExpression, RawRequestDefaultExpression,
+  RawServerBase, RequestHeadersDefault, RequestParamsDefault, RequestQuerystringDefault,
+  RouteHandlerMethod
+} from 'fastify';
 import fastifyBsbLogger from './logger';
+import { hostname } from 'os';
 
 export class Plugin extends CPlugin<IWebServerConfig> {
   private HTTPFastify!: FastifyInstance;
@@ -31,6 +37,20 @@ export class Plugin extends CPlugin<IWebServerConfig> {
         });
         self.log.info(`[HTTPS] Server ready: ${ self.getPluginConfig().host }:${ self.getPluginConfig().httpsPort }`);
       }
+      self.options('/BSB/Ping', (req, res) => {
+        res.header('Content-Type', 'application/json');
+        res.code(200).send({
+          requestId: req.id,
+          requestIp: {
+            ip: req.ip,
+            ips: req.ips
+          },
+          requestHostname: req.hostname,
+          time: new Date().getTime(),
+          alive: true,
+          clusterId: hostname()
+        });
+      });
       resolve();
     });
   }
@@ -87,7 +107,18 @@ export class Plugin extends CPlugin<IWebServerConfig> {
       resolve();
     });
   }
-  head(path: string, handler: RouteHandlerMethod): Promise<void> {
+  head<
+    Body = any,
+    Params = RequestParamsDefault,
+    Querystring = RequestQuerystringDefault,
+    Headers = RequestHeadersDefault
+  >(path: string, handler: RouteHandlerMethod<
+    RawServerBase,
+    RawRequestDefaultExpression<RawServerBase>,
+    RawReplyDefaultExpression<RawServerBase>,
+    FastifyRequestInterface<Body, Params, Querystring, Headers>,
+    ContextConfigDefault>
+  ): Promise<void> {
     const self = this;
     return new Promise((resolve) => {
       let server = self.getServerToListenTo();
@@ -97,7 +128,18 @@ export class Plugin extends CPlugin<IWebServerConfig> {
       resolve();
     });
   }
-  get(path: string, handler: RouteHandlerMethod): Promise<void> {
+  get<
+    Body = any,
+    Params = RequestParamsDefault,
+    Querystring = RequestQuerystringDefault,
+    Headers = RequestHeadersDefault
+  >(path: string, handler: RouteHandlerMethod<
+    RawServerBase,
+    RawRequestDefaultExpression<RawServerBase>,
+    RawReplyDefaultExpression<RawServerBase>,
+    FastifyRequestInterface<Body, Params, Querystring, Headers>,
+    ContextConfigDefault>
+  ): Promise<void> {
     const self = this;
     return new Promise((resolve) => {
       let server = self.getServerToListenTo();
@@ -107,7 +149,18 @@ export class Plugin extends CPlugin<IWebServerConfig> {
       resolve();
     });
   }
-  post(path: string, handler: RouteHandlerMethod): Promise<void> {
+  post<
+    Body = any,
+    Params = RequestParamsDefault,
+    Querystring = RequestQuerystringDefault,
+    Headers = RequestHeadersDefault
+  >(path: string, handler: RouteHandlerMethod<
+    RawServerBase,
+    RawRequestDefaultExpression<RawServerBase>,
+    RawReplyDefaultExpression<RawServerBase>,
+    FastifyRequestInterface<Body, Params, Querystring, Headers>,
+    ContextConfigDefault>
+  ): Promise<void> {
     const self = this;
     return new Promise((resolve) => {
       let server = self.getServerToListenTo();
@@ -117,7 +170,18 @@ export class Plugin extends CPlugin<IWebServerConfig> {
       resolve();
     });
   }
-  put(path: string, handler: RouteHandlerMethod): Promise<void> {
+  put<
+    Body = any,
+    Params = RequestParamsDefault,
+    Querystring = RequestQuerystringDefault,
+    Headers = RequestHeadersDefault
+  >(path: string, handler: RouteHandlerMethod<
+    RawServerBase,
+    RawRequestDefaultExpression<RawServerBase>,
+    RawReplyDefaultExpression<RawServerBase>,
+    FastifyRequestInterface<Body, Params, Querystring, Headers>,
+    ContextConfigDefault>
+  ): Promise<void> {
     const self = this;
     return new Promise((resolve) => {
       let server = self.getServerToListenTo();
@@ -127,7 +191,18 @@ export class Plugin extends CPlugin<IWebServerConfig> {
       resolve();
     });
   }
-  delete(path: string, handler: RouteHandlerMethod): Promise<void> {
+  delete<
+    Body = any,
+    Params = RequestParamsDefault,
+    Querystring = RequestQuerystringDefault,
+    Headers = RequestHeadersDefault
+  >(path: string, handler: RouteHandlerMethod<
+    RawServerBase,
+    RawRequestDefaultExpression<RawServerBase>,
+    RawReplyDefaultExpression<RawServerBase>,
+    FastifyRequestInterface<Body, Params, Querystring, Headers>,
+    ContextConfigDefault>
+  ): Promise<void> {
     const self = this;
     return new Promise((resolve) => {
       let server = self.getServerToListenTo();
@@ -137,7 +212,18 @@ export class Plugin extends CPlugin<IWebServerConfig> {
       resolve();
     });
   }
-  patch(path: string, handler: RouteHandlerMethod): Promise<void> {
+  patch<
+    Body = any,
+    Params = RequestParamsDefault,
+    Querystring = RequestQuerystringDefault,
+    Headers = RequestHeadersDefault
+  >(path: string, handler: RouteHandlerMethod<
+    RawServerBase,
+    RawRequestDefaultExpression<RawServerBase>,
+    RawReplyDefaultExpression<RawServerBase>,
+    FastifyRequestInterface<Body, Params, Querystring, Headers>,
+    ContextConfigDefault>
+  ): Promise<void> {
     const self = this;
     return new Promise((resolve) => {
       let server = self.getServerToListenTo();
@@ -147,7 +233,18 @@ export class Plugin extends CPlugin<IWebServerConfig> {
       resolve();
     });
   }
-  options(path: string, handler: RouteHandlerMethod): Promise<void> {
+  options<
+    Body = any,
+    Params = RequestParamsDefault,
+    Querystring = RequestQuerystringDefault,
+    Headers = RequestHeadersDefault
+  >(path: string, handler: RouteHandlerMethod<
+    RawServerBase,
+    RawRequestDefaultExpression<RawServerBase>,
+    RawReplyDefaultExpression<RawServerBase>,
+    FastifyRequestInterface<Body, Params, Querystring, Headers>,
+    ContextConfigDefault>
+  ): Promise<void> {
     const self = this;
     return new Promise((resolve) => {
       let server = self.getServerToListenTo();
@@ -157,7 +254,18 @@ export class Plugin extends CPlugin<IWebServerConfig> {
       resolve();
     });
   }
-  all(path: string, handler: RouteHandlerMethod): Promise<void> {
+  all<
+    Body = any,
+    Params = RequestParamsDefault,
+    Querystring = RequestQuerystringDefault,
+    Headers = RequestHeadersDefault
+  >(path: string, handler: RouteHandlerMethod<
+    RawServerBase,
+    RawRequestDefaultExpression<RawServerBase>,
+    RawReplyDefaultExpression<RawServerBase>,
+    FastifyRequestInterface<Body, Params, Querystring, Headers>,
+    ContextConfigDefault>
+  ): Promise<void> {
     const self = this;
     return new Promise((resolve) => {
       let server = self.getServerToListenTo();
@@ -180,7 +288,18 @@ export class Plugin extends CPlugin<IWebServerConfig> {
       resolve();
     });
   }
-  httpHead(path: string, handler: RouteHandlerMethod): Promise<void> {
+  httpHead<
+    Body = any,
+    Params = RequestParamsDefault,
+    Querystring = RequestQuerystringDefault,
+    Headers = RequestHeadersDefault
+  >(path: string, handler: RouteHandlerMethod<
+    RawServerBase,
+    RawRequestDefaultExpression<RawServerBase>,
+    RawReplyDefaultExpression<RawServerBase>,
+    FastifyRequestInterface<Body, Params, Querystring, Headers>,
+    ContextConfigDefault>
+  ): Promise<void> {
     const self = this;
     return new Promise((resolve) => {
       let server = self.getServerToListenTo();
@@ -190,7 +309,18 @@ export class Plugin extends CPlugin<IWebServerConfig> {
       resolve();
     });
   }
-  httpGet(path: string, handler: RouteHandlerMethod): Promise<void> {
+  httpGet<
+    Body = any,
+    Params = RequestParamsDefault,
+    Querystring = RequestQuerystringDefault,
+    Headers = RequestHeadersDefault
+  >(path: string, handler: RouteHandlerMethod<
+    RawServerBase,
+    RawRequestDefaultExpression<RawServerBase>,
+    RawReplyDefaultExpression<RawServerBase>,
+    FastifyRequestInterface<Body, Params, Querystring, Headers>,
+    ContextConfigDefault>
+  ): Promise<void> {
     const self = this;
     return new Promise((resolve, reject) => {
       if (self.getPluginConfig().server === IWebServerConfigServer.https) return reject('HTTP NOT ENABLED');
@@ -200,7 +330,18 @@ export class Plugin extends CPlugin<IWebServerConfig> {
       resolve();
     });
   }
-  httpPost(path: string, handler: RouteHandlerMethod): Promise<void> {
+  httpPost<
+    Body = any,
+    Params = RequestParamsDefault,
+    Querystring = RequestQuerystringDefault,
+    Headers = RequestHeadersDefault
+  >(path: string, handler: RouteHandlerMethod<
+    RawServerBase,
+    RawRequestDefaultExpression<RawServerBase>,
+    RawReplyDefaultExpression<RawServerBase>,
+    FastifyRequestInterface<Body, Params, Querystring, Headers>,
+    ContextConfigDefault>
+  ): Promise<void> {
     const self = this;
     return new Promise((resolve, reject) => {
       if (self.getPluginConfig().server === IWebServerConfigServer.https) return reject('HTTP NOT ENABLED');
@@ -210,7 +351,18 @@ export class Plugin extends CPlugin<IWebServerConfig> {
       resolve();
     });
   }
-  httpPut(path: string, handler: RouteHandlerMethod): Promise<void> {
+  httpPut<
+    Body = any,
+    Params = RequestParamsDefault,
+    Querystring = RequestQuerystringDefault,
+    Headers = RequestHeadersDefault
+  >(path: string, handler: RouteHandlerMethod<
+    RawServerBase,
+    RawRequestDefaultExpression<RawServerBase>,
+    RawReplyDefaultExpression<RawServerBase>,
+    FastifyRequestInterface<Body, Params, Querystring, Headers>,
+    ContextConfigDefault>
+  ): Promise<void> {
     const self = this;
     return new Promise((resolve, reject) => {
       if (self.getPluginConfig().server === IWebServerConfigServer.https) return reject('HTTP NOT ENABLED');
@@ -220,7 +372,18 @@ export class Plugin extends CPlugin<IWebServerConfig> {
       resolve();
     });
   }
-  httpDelete(path: string, handler: RouteHandlerMethod): Promise<void> {
+  httpDelete<
+    Body = any,
+    Params = RequestParamsDefault,
+    Querystring = RequestQuerystringDefault,
+    Headers = RequestHeadersDefault
+  >(path: string, handler: RouteHandlerMethod<
+    RawServerBase,
+    RawRequestDefaultExpression<RawServerBase>,
+    RawReplyDefaultExpression<RawServerBase>,
+    FastifyRequestInterface<Body, Params, Querystring, Headers>,
+    ContextConfigDefault>
+  ): Promise<void> {
     const self = this;
     return new Promise((resolve, reject) => {
       if (self.getPluginConfig().server === IWebServerConfigServer.https) return reject('HTTP NOT ENABLED');
@@ -230,7 +393,18 @@ export class Plugin extends CPlugin<IWebServerConfig> {
       resolve();
     });
   }
-  httpPatch(path: string, handler: RouteHandlerMethod): Promise<void> {
+  httpPatch<
+    Body = any,
+    Params = RequestParamsDefault,
+    Querystring = RequestQuerystringDefault,
+    Headers = RequestHeadersDefault
+  >(path: string, handler: RouteHandlerMethod<
+    RawServerBase,
+    RawRequestDefaultExpression<RawServerBase>,
+    RawReplyDefaultExpression<RawServerBase>,
+    FastifyRequestInterface<Body, Params, Querystring, Headers>,
+    ContextConfigDefault>
+  ): Promise<void> {
     const self = this;
     return new Promise((resolve, reject) => {
       if (self.getPluginConfig().server === IWebServerConfigServer.https) return reject('HTTP NOT ENABLED');
@@ -240,7 +414,18 @@ export class Plugin extends CPlugin<IWebServerConfig> {
       resolve();
     });
   }
-  httpOptions(path: string, handler: RouteHandlerMethod): Promise<void> {
+  httpOptions<
+    Body = any,
+    Params = RequestParamsDefault,
+    Querystring = RequestQuerystringDefault,
+    Headers = RequestHeadersDefault
+  >(path: string, handler: RouteHandlerMethod<
+    RawServerBase,
+    RawRequestDefaultExpression<RawServerBase>,
+    RawReplyDefaultExpression<RawServerBase>,
+    FastifyRequestInterface<Body, Params, Querystring, Headers>,
+    ContextConfigDefault>
+  ): Promise<void> {
     const self = this;
     return new Promise((resolve, reject) => {
       if (self.getPluginConfig().server === IWebServerConfigServer.https) return reject('HTTP NOT ENABLED');
@@ -250,7 +435,18 @@ export class Plugin extends CPlugin<IWebServerConfig> {
       resolve();
     });
   }
-  httpAll(path: string, handler: RouteHandlerMethod): Promise<void> {
+  httpAll<
+    Body = any,
+    Params = RequestParamsDefault,
+    Querystring = RequestQuerystringDefault,
+    Headers = RequestHeadersDefault
+  >(path: string, handler: RouteHandlerMethod<
+    RawServerBase,
+    RawRequestDefaultExpression<RawServerBase>,
+    RawReplyDefaultExpression<RawServerBase>,
+    FastifyRequestInterface<Body, Params, Querystring, Headers>,
+    ContextConfigDefault>
+  ): Promise<void> {
     const self = this;
     return new Promise((resolve, reject) => {
       if (self.getPluginConfig().server === IWebServerConfigServer.https) return reject('HTTP NOT ENABLED');
@@ -273,7 +469,18 @@ export class Plugin extends CPlugin<IWebServerConfig> {
       resolve();
     });
   }
-  httpsHead(path: string, handler: RouteHandlerMethod): Promise<void> {
+  httpsHead<
+    Body = any,
+    Params = RequestParamsDefault,
+    Querystring = RequestQuerystringDefault,
+    Headers = RequestHeadersDefault
+  >(path: string, handler: RouteHandlerMethod<
+    RawServerBase,
+    RawRequestDefaultExpression<RawServerBase>,
+    RawReplyDefaultExpression<RawServerBase>,
+    FastifyRequestInterface<Body, Params, Querystring, Headers>,
+    ContextConfigDefault>
+  ): Promise<void> {
     const self = this;
     return new Promise((resolve, reject) => {
       if (self.getPluginConfig().server === IWebServerConfigServer.http) return reject('HTTPS NOT ENABLED');
@@ -283,7 +490,18 @@ export class Plugin extends CPlugin<IWebServerConfig> {
       resolve();
     });
   }
-  httpsGet(path: string, handler: RouteHandlerMethod): Promise<void> {
+  httpsGet<
+    Body = any,
+    Params = RequestParamsDefault,
+    Querystring = RequestQuerystringDefault,
+    Headers = RequestHeadersDefault
+  >(path: string, handler: RouteHandlerMethod<
+    RawServerBase,
+    RawRequestDefaultExpression<RawServerBase>,
+    RawReplyDefaultExpression<RawServerBase>,
+    FastifyRequestInterface<Body, Params, Querystring, Headers>,
+    ContextConfigDefault>
+  ): Promise<void> {
     const self = this;
     return new Promise((resolve, reject) => {
       if (self.getPluginConfig().server === IWebServerConfigServer.http) return reject('HTTPS NOT ENABLED');
@@ -293,7 +511,18 @@ export class Plugin extends CPlugin<IWebServerConfig> {
       resolve();
     });
   }
-  httpsPost(path: string, handler: RouteHandlerMethod): Promise<void> {
+  httpsPost<
+    Body = any,
+    Params = RequestParamsDefault,
+    Querystring = RequestQuerystringDefault,
+    Headers = RequestHeadersDefault
+  >(path: string, handler: RouteHandlerMethod<
+    RawServerBase,
+    RawRequestDefaultExpression<RawServerBase>,
+    RawReplyDefaultExpression<RawServerBase>,
+    FastifyRequestInterface<Body, Params, Querystring, Headers>,
+    ContextConfigDefault>
+  ): Promise<void> {
     const self = this;
     return new Promise((resolve, reject) => {
       if (self.getPluginConfig().server === IWebServerConfigServer.http) return reject('HTTPS NOT ENABLED');
@@ -303,7 +532,18 @@ export class Plugin extends CPlugin<IWebServerConfig> {
       resolve();
     });
   }
-  httpsPut(path: string, handler: RouteHandlerMethod): Promise<void> {
+  httpsPut<
+    Body = any,
+    Params = RequestParamsDefault,
+    Querystring = RequestQuerystringDefault,
+    Headers = RequestHeadersDefault
+  >(path: string, handler: RouteHandlerMethod<
+    RawServerBase,
+    RawRequestDefaultExpression<RawServerBase>,
+    RawReplyDefaultExpression<RawServerBase>,
+    FastifyRequestInterface<Body, Params, Querystring, Headers>,
+    ContextConfigDefault>
+  ): Promise<void> {
     const self = this;
     return new Promise((resolve, reject) => {
       if (self.getPluginConfig().server === IWebServerConfigServer.http) return reject('HTTPS NOT ENABLED');
@@ -313,7 +553,18 @@ export class Plugin extends CPlugin<IWebServerConfig> {
       resolve();
     });
   }
-  httpsDelete(path: string, handler: RouteHandlerMethod): Promise<void> {
+  httpsDelete<
+    Body = any,
+    Params = RequestParamsDefault,
+    Querystring = RequestQuerystringDefault,
+    Headers = RequestHeadersDefault
+  >(path: string, handler: RouteHandlerMethod<
+    RawServerBase,
+    RawRequestDefaultExpression<RawServerBase>,
+    RawReplyDefaultExpression<RawServerBase>,
+    FastifyRequestInterface<Body, Params, Querystring, Headers>,
+    ContextConfigDefault>
+  ): Promise<void> {
     const self = this;
     return new Promise((resolve, reject) => {
       if (self.getPluginConfig().server === IWebServerConfigServer.http) return reject('HTTPS NOT ENABLED');
@@ -323,7 +574,18 @@ export class Plugin extends CPlugin<IWebServerConfig> {
       resolve();
     });
   }
-  httpsPatch(path: string, handler: RouteHandlerMethod): Promise<void> {
+  httpsPatch<
+    Body = any,
+    Params = RequestParamsDefault,
+    Querystring = RequestQuerystringDefault,
+    Headers = RequestHeadersDefault
+  >(path: string, handler: RouteHandlerMethod<
+    RawServerBase,
+    RawRequestDefaultExpression<RawServerBase>,
+    RawReplyDefaultExpression<RawServerBase>,
+    FastifyRequestInterface<Body, Params, Querystring, Headers>,
+    ContextConfigDefault>
+  ): Promise<void> {
     const self = this;
     return new Promise((resolve, reject) => {
       if (self.getPluginConfig().server === IWebServerConfigServer.http) return reject('HTTPS NOT ENABLED');
@@ -333,7 +595,18 @@ export class Plugin extends CPlugin<IWebServerConfig> {
       resolve();
     });
   }
-  httpsOptions(path: string, handler: RouteHandlerMethod): Promise<void> {
+  httpsOptions<
+    Body = any,
+    Params = RequestParamsDefault,
+    Querystring = RequestQuerystringDefault,
+    Headers = RequestHeadersDefault
+  >(path: string, handler: RouteHandlerMethod<
+    RawServerBase,
+    RawRequestDefaultExpression<RawServerBase>,
+    RawReplyDefaultExpression<RawServerBase>,
+    FastifyRequestInterface<Body, Params, Querystring, Headers>,
+    ContextConfigDefault>
+  ): Promise<void> {
     const self = this;
     return new Promise((resolve, reject) => {
       if (self.getPluginConfig().server === IWebServerConfigServer.http) return reject('HTTPS NOT ENABLED');
@@ -343,7 +616,18 @@ export class Plugin extends CPlugin<IWebServerConfig> {
       resolve();
     });
   }
-  httpsAll(path: string, handler: RouteHandlerMethod): Promise<void> {
+  httpsAll<
+    Body = any,
+    Params = RequestParamsDefault,
+    Querystring = RequestQuerystringDefault,
+    Headers = RequestHeadersDefault
+  >(path: string, handler: RouteHandlerMethod<
+    RawServerBase,
+    RawRequestDefaultExpression<RawServerBase>,
+    RawReplyDefaultExpression<RawServerBase>,
+    FastifyRequestInterface<Body, Params, Querystring, Headers>,
+    ContextConfigDefault>
+  ): Promise<void> {
     const self = this;
     return new Promise((resolve, reject) => {
       if (self.getPluginConfig().server === IWebServerConfigServer.http) return reject('HTTPS NOT ENABLED');

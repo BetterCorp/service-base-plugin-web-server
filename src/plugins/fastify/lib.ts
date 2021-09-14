@@ -1,4 +1,7 @@
-import { FastifyInstance } from 'fastify';
+import {
+  FastifyInstance, RequestGenericInterface, RequestHeadersDefault,
+  RequestParamsDefault, RequestQuerystringDefault
+} from 'fastify';
 
 export enum IWebServerConfigServer {
   http = "http",
@@ -22,4 +25,15 @@ export interface IWebServerInitPlugin {
 export interface IWebServerListenerHelper {
   server: FastifyInstance;
   type: string;
+}
+export interface FastifyRequestInterface<
+  Body = any,
+  Params = RequestParamsDefault,
+  Querystring = RequestQuerystringDefault,
+  Headers = RequestHeadersDefault
+  > extends RequestGenericInterface {
+  Body?: Body;
+  Querystring?: Querystring;
+  Params?: Params;
+  Headers?: Headers;
 }
