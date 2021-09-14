@@ -22,7 +22,7 @@ export class Plugin extends CPlugin<IWebServerConfig> {
         self.HTTPSExpress = EXPRESS();
         self.log.info(`[HTTPS] Server ready: ${ self.getPluginConfig().host }:${ self.getPluginConfig().httpsPort }`);
       }
-      self.options('/BSB/Ping', (req: any, res: any) => {
+      self.get('/health', (req: any, res: any) => {
         res.setHeader('Content-Type', 'application/json');
         res.send({
           time: new Date().getTime(),

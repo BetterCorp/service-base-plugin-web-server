@@ -9,6 +9,8 @@ import {
   RouteHandlerMethod
 } from 'fastify';
 import fastifyBsbLogger from './logger';
+import fastifyCors from 'fastify-cors';
+import fastifyRateLimit from 'fastify-rate-limit';
 import { hostname } from 'os';
 
 export class Plugin extends CPlugin<IWebServerConfig> {
@@ -37,14 +39,22 @@ export class Plugin extends CPlugin<IWebServerConfig> {
         });
         self.log.info(`[HTTPS] Server ready: ${ self.getPluginConfig().host }:${ self.getPluginConfig().httpsPort }`);
       }
-      self.options('/BSB/Ping', (req, res) => {
+      if (self.getPluginConfig().cors.enabled) {
+        self.log.info(`Enabled CORS Service`);
+        self.register(fastifyCors, self.getPluginConfig().cors.options);
+      }
+      if (self.getPluginConfig().rateLimit.enabled) {
+        self.log.info(`Enabled Rate Limit Service`);
+        self.register(fastifyRateLimit, self.getPluginConfig().rateLimit.options);
+      }
+      self.get('/health', (req, res) => {
         res.header('Content-Type', 'application/json');
         res.code(200).send({
           requestId: req.id,
-          requestIp: {
+          /*requestIp: {
             ip: req.ip,
             ips: req.ips
-          },
+          },*/
           requestHostname: req.hostname,
           time: new Date().getTime(),
           alive: true,
