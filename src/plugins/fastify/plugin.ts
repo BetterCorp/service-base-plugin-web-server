@@ -19,33 +19,33 @@ export class Plugin extends CPlugin<IWebServerConfig> {
   public readonly initIndex: number = Number.MIN_SAFE_INTEGER;
   init(): Promise<void> {
     const self = this;
-    return new Promise((resolve) => {
-      if (self.getPluginConfig().server === IWebServerConfigServer.http) {
+    return new Promise(async (resolve) => {
+      if ((await self.getPluginConfig()).server === IWebServerConfigServer.http) {
         self.HTTPFastify = fastify({});
         self.HTTPFastify.register(fastifyBsbLogger, {
           uSelf: self
         });
-        self.log.info(`[HTTP] Server ready: ${ self.getPluginConfig().host }:${ self.getPluginConfig().httpPort }`);
+        self.log.info(`[HTTP] Server ready: ${ (await self.getPluginConfig()).host }:${ (await self.getPluginConfig()).httpPort }`);
       }
-      if (self.getPluginConfig().server === IWebServerConfigServer.https) {
+      if ((await self.getPluginConfig()).server === IWebServerConfigServer.https) {
         self.HTTPSFastify = fastify({
           https: {
-            cert: readFileSync(self.getPluginConfig().httpsCert!),
-            key: readFileSync(self.getPluginConfig().httpsKey!)
+            cert: readFileSync((await self.getPluginConfig()).httpsCert!),
+            key: readFileSync((await self.getPluginConfig()).httpsKey!)
           }
         });
         self.HTTPSFastify.register(fastifyBsbLogger, {
           uSelf: self
         });
-        self.log.info(`[HTTPS] Server ready: ${ self.getPluginConfig().host }:${ self.getPluginConfig().httpsPort }`);
+        self.log.info(`[HTTPS] Server ready: ${ (await self.getPluginConfig()).host }:${ (await self.getPluginConfig()).httpsPort }`);
       }
-      if (self.getPluginConfig().cors.enabled) {
+      if ((await self.getPluginConfig()).cors.enabled) {
         self.log.info(`Enabled CORS Service`);
-        self.register(fastifyCors, self.getPluginConfig().cors.options);
+        self.register(fastifyCors, (await self.getPluginConfig()).cors.options);
       }
-      if (self.getPluginConfig().rateLimit.enabled) {
+      if ((await self.getPluginConfig()).rateLimit.enabled) {
         self.log.info(`Enabled Rate Limit Service`);
-        self.register(fastifyRateLimit, self.getPluginConfig().rateLimit.options);
+        self.register(fastifyRateLimit, (await self.getPluginConfig()).rateLimit.options);
       }
       self.get('/health', (req, res) => {
         res.header('Content-Type', 'application/json');
@@ -67,23 +67,23 @@ export class Plugin extends CPlugin<IWebServerConfig> {
   public readonly loadedIndex: number = Number.MAX_SAFE_INTEGER;
   loaded(): Promise<void> {
     const self = this;
-    return new Promise((resolve) => {
+    return new Promise(async (resolve) => {
       self.log.debug(`loaded`);
-      if (self.getPluginConfig().server === IWebServerConfigServer.http || self.getPluginConfig().server === IWebServerConfigServer.httpAndHttps) {
-        self.HTTPFastify.listen(self.getPluginConfig().httpPort, self.getPluginConfig().host, () =>
-          console.log(`[HTTP] Listening ${ self.getPluginConfig().host }:${ self.getPluginConfig().httpPort } for WW!`));
-        self.log.info(`[HTTP] Server started ${ self.getPluginConfig().host }:${ self.getPluginConfig().httpPort }`);
+      if ((await self.getPluginConfig()).server === IWebServerConfigServer.http || (await self.getPluginConfig()).server === IWebServerConfigServer.httpAndHttps) {
+        self.HTTPFastify.listen((await self.getPluginConfig()).httpPort, (await self.getPluginConfig()).host, async () =>
+          console.log(`[HTTP] Listening ${ (await self.getPluginConfig()).host }:${ (await self.getPluginConfig()).httpPort } for WW!`));
+        self.log.info(`[HTTP] Server started ${ (await self.getPluginConfig()).host }:${ (await self.getPluginConfig()).httpPort }`);
       }
-      if (self.getPluginConfig().server === IWebServerConfigServer.https || self.getPluginConfig().server === IWebServerConfigServer.httpAndHttps) {
-        self.HTTPSFastify.listen(self.getPluginConfig().httpsPort, self.getPluginConfig().host, () =>
-          console.log(`[HTTPS] Listening ${ self.getPluginConfig().host }:${ self.getPluginConfig().httpsPort }!`));
-        self.log.info(`[HTTPS] Server started ${ self.getPluginConfig().host }:${ self.getPluginConfig().httpsPort }`);
+      if ((await self.getPluginConfig()).server === IWebServerConfigServer.https || (await self.getPluginConfig()).server === IWebServerConfigServer.httpAndHttps) {
+        self.HTTPSFastify.listen((await self.getPluginConfig()).httpsPort, (await self.getPluginConfig()).host, async () =>
+          console.log(`[HTTPS] Listening ${ (await self.getPluginConfig()).host }:${ (await self.getPluginConfig()).httpsPort }!`));
+        self.log.info(`[HTTPS] Server started ${ (await self.getPluginConfig()).host }:${ (await self.getPluginConfig()).httpsPort }`);
       }
-      if (self.getPluginConfig().server === IWebServerConfigServer.httpAndHttps && self.getPluginConfig().httpToHttpsRedirect) {
-        self.HTTPFastify.get('/*', (req: FastifyRequest, reply: FastifyReply) => {
-          reply.redirect(301, `https://${ req.hostname }:${ self.getPluginConfig().httpsPort }${ req.url }`);
+      if ((await self.getPluginConfig()).server === IWebServerConfigServer.httpAndHttps && (await self.getPluginConfig()).httpToHttpsRedirect) {
+        self.HTTPFastify.get('/*', async (req: FastifyRequest, reply: FastifyReply) => {
+          reply.redirect(301, `https://${ req.hostname }:${ (await self.getPluginConfig()).httpsPort }${ req.url }`);
         });
-        self.log.info(`[HTTP] Server redirect: ${ self.getPluginConfig().host }:${ self.getPluginConfig().httpPort }`);
+        self.log.info(`[HTTP] Server redirect: ${ (await self.getPluginConfig()).host }:${ (await self.getPluginConfig()).httpPort }`);
       }
       resolve();
     });
@@ -91,14 +91,14 @@ export class Plugin extends CPlugin<IWebServerConfig> {
 
   // DYNAMIC HANDLING
   public async getServerInstance(): Promise<FastifyInstance> {
-    return this.getServerToListenTo().server;
+    return (await this.getServerToListenTo()).server;
   }
-  private getServerToListenTo(): IWebServerListenerHelper {
+  private async getServerToListenTo(): Promise<IWebServerListenerHelper> {
     let serverToListenOn = {
       server: this.HTTPSFastify,
       type: "HTTPS"
     };
-    if (this.getPluginConfig().server === IWebServerConfigServer.http) {
+    if ((await this.getPluginConfig()).server === IWebServerConfigServer.http) {
       serverToListenOn = {
         server: this.HTTPFastify,
         type: "HTTP"
@@ -109,8 +109,8 @@ export class Plugin extends CPlugin<IWebServerConfig> {
   register(plugin: FastifyPluginCallback<FastifyPluginOptions> | FastifyPluginAsync<FastifyPluginOptions> | Promise<{ default: FastifyPluginCallback<FastifyPluginOptions>; }> | Promise<{ default: FastifyPluginAsync<FastifyPluginOptions>; }>,
     opts?: FastifyRegisterOptions<FastifyPluginOptions>): Promise<void> {
     const self = this;
-    return new Promise((resolve) => {
-      let server = self.getServerToListenTo();
+    return new Promise(async (resolve) => {
+      let server = await self.getServerToListenTo();
       self.log.debug(`[${ server.type }] initForPlugins [USE]`);
       server.server.register(plugin, opts);
       self.log.debug(`[${ server.type }] initForPlugins [USE] OKAY`);
@@ -130,8 +130,8 @@ export class Plugin extends CPlugin<IWebServerConfig> {
     ContextConfigDefault>
   ): Promise<void> {
     const self = this;
-    return new Promise((resolve) => {
-      let server = self.getServerToListenTo();
+    return new Promise(async (resolve) => {
+      let server = await self.getServerToListenTo();
       self.log.debug(`[${ server.type }] initForPlugins [HEAD]${ path }`);
       server.server.head(path, handler);
       self.log.debug(`[${ server.type }] initForPlugins [HEAD] OKAY`);
@@ -151,8 +151,8 @@ export class Plugin extends CPlugin<IWebServerConfig> {
     ContextConfigDefault>
   ): Promise<void> {
     const self = this;
-    return new Promise((resolve) => {
-      let server = self.getServerToListenTo();
+    return new Promise(async (resolve) => {
+      let server = await self.getServerToListenTo();
       self.log.debug(`[${ server.type }] initForPlugins [GET]${ path }`);
       server.server.get(path, handler);
       self.log.debug(`[${ server.type }] initForPlugins [GET] OKAY`);
@@ -172,8 +172,8 @@ export class Plugin extends CPlugin<IWebServerConfig> {
     ContextConfigDefault>
   ): Promise<void> {
     const self = this;
-    return new Promise((resolve) => {
-      let server = self.getServerToListenTo();
+    return new Promise(async (resolve) => {
+      let server = await self.getServerToListenTo();
       self.log.debug(`[${ server.type }] initForPlugins [POST]${ path }`);
       server.server.post(path, handler);
       self.log.debug(`[${ server.type }] initForPlugins [POST] OKAY`);
@@ -193,8 +193,8 @@ export class Plugin extends CPlugin<IWebServerConfig> {
     ContextConfigDefault>
   ): Promise<void> {
     const self = this;
-    return new Promise((resolve) => {
-      let server = self.getServerToListenTo();
+    return new Promise(async (resolve) => {
+      let server = await self.getServerToListenTo();
       self.log.debug(`[${ server.type }] initForPlugins [PUT]${ path }`);
       server.server.put(path, handler);
       self.log.debug(`[${ server.type }] initForPlugins [PUT] OKAY`);
@@ -214,8 +214,8 @@ export class Plugin extends CPlugin<IWebServerConfig> {
     ContextConfigDefault>
   ): Promise<void> {
     const self = this;
-    return new Promise((resolve) => {
-      let server = self.getServerToListenTo();
+    return new Promise(async (resolve) => {
+      let server = await self.getServerToListenTo();
       self.log.debug(`[${ server.type }] initForPlugins [DELETE]${ path }`);
       server.server.delete(path, handler);
       self.log.debug(`[${ server.type }] initForPlugins [DELETE] OKAY`);
@@ -235,8 +235,8 @@ export class Plugin extends CPlugin<IWebServerConfig> {
     ContextConfigDefault>
   ): Promise<void> {
     const self = this;
-    return new Promise((resolve) => {
-      let server = self.getServerToListenTo();
+    return new Promise(async (resolve) => {
+      let server = await self.getServerToListenTo();
       self.log.debug(`[${ server.type }] initForPlugins [PATCH]${ path }`);
       server.server.patch(path, handler);
       self.log.debug(`[${ server.type }] initForPlugins [PATCH] OKAY`);
@@ -256,8 +256,8 @@ export class Plugin extends CPlugin<IWebServerConfig> {
     ContextConfigDefault>
   ): Promise<void> {
     const self = this;
-    return new Promise((resolve) => {
-      let server = self.getServerToListenTo();
+    return new Promise(async (resolve) => {
+      let server = await self.getServerToListenTo();
       self.log.debug(`[${ server.type }] initForPlugins [OPTIONS]${ path }`);
       server.server.options(path, handler);
       self.log.debug(`[${ server.type }] initForPlugins [OPTIONS] OKAY`);
@@ -277,8 +277,8 @@ export class Plugin extends CPlugin<IWebServerConfig> {
     ContextConfigDefault>
   ): Promise<void> {
     const self = this;
-    return new Promise((resolve) => {
-      let server = self.getServerToListenTo();
+    return new Promise(async (resolve) => {
+      let server = await self.getServerToListenTo();
       self.log.debug(`[${ server.type }] initForPlugins [ALL]${ path }`);
       server.server.all(path, handler);
       self.log.debug(`[${ server.type }] initForPlugins [ALL] OKAY`);
@@ -290,8 +290,8 @@ export class Plugin extends CPlugin<IWebServerConfig> {
   httpRegister(plugin: FastifyPluginCallback<FastifyPluginOptions> | FastifyPluginAsync<FastifyPluginOptions> | Promise<{ default: FastifyPluginCallback<FastifyPluginOptions>; }> | Promise<{ default: FastifyPluginAsync<FastifyPluginOptions>; }>,
     opts?: FastifyRegisterOptions<FastifyPluginOptions>): Promise<void> {
     const self = this;
-    return new Promise((resolve, reject) => {
-      if (self.getPluginConfig().server === IWebServerConfigServer.https) return reject('HTTP NOT ENABLED');
+    return new Promise(async (resolve, reject) => {
+      if ((await self.getPluginConfig()).server === IWebServerConfigServer.https) return reject('HTTP NOT ENABLED');
       self.log.debug(`[HTTP_ONLY] initForPlugins [USE]`);
       self.HTTPFastify.register(plugin, opts);
       self.log.debug(`[HTTP_ONLY] initForPlugins [USE] OKAY`);
@@ -311,8 +311,8 @@ export class Plugin extends CPlugin<IWebServerConfig> {
     ContextConfigDefault>
   ): Promise<void> {
     const self = this;
-    return new Promise((resolve) => {
-      let server = self.getServerToListenTo();
+    return new Promise(async (resolve) => {
+      let server = await self.getServerToListenTo();
       self.log.debug(`[${ server.type }] initForPlugins [HEAD]${ path }`);
       server.server.head(path, handler);
       self.log.debug(`[${ server.type }] initForPlugins [HEAD] OKAY`);
@@ -332,8 +332,8 @@ export class Plugin extends CPlugin<IWebServerConfig> {
     ContextConfigDefault>
   ): Promise<void> {
     const self = this;
-    return new Promise((resolve, reject) => {
-      if (self.getPluginConfig().server === IWebServerConfigServer.https) return reject('HTTP NOT ENABLED');
+    return new Promise(async (resolve, reject) => {
+      if ((await self.getPluginConfig()).server === IWebServerConfigServer.https) return reject('HTTP NOT ENABLED');
       self.log.debug(`[HTTP_ONLY] initForPlugins [GET]${ path }`);
       self.HTTPFastify.get(path, handler);
       self.log.debug(`[HTTP_ONLY] initForPlugins [GET] OKAY`);
@@ -353,8 +353,8 @@ export class Plugin extends CPlugin<IWebServerConfig> {
     ContextConfigDefault>
   ): Promise<void> {
     const self = this;
-    return new Promise((resolve, reject) => {
-      if (self.getPluginConfig().server === IWebServerConfigServer.https) return reject('HTTP NOT ENABLED');
+    return new Promise(async (resolve, reject) => {
+      if ((await self.getPluginConfig()).server === IWebServerConfigServer.https) return reject('HTTP NOT ENABLED');
       self.log.debug(`[HTTP_ONLY] initForPlugins [POST]${ path }`);
       self.HTTPFastify.post(path, handler);
       self.log.debug(`[HTTP_ONLY] initForPlugins [POST] OKAY`);
@@ -374,8 +374,8 @@ export class Plugin extends CPlugin<IWebServerConfig> {
     ContextConfigDefault>
   ): Promise<void> {
     const self = this;
-    return new Promise((resolve, reject) => {
-      if (self.getPluginConfig().server === IWebServerConfigServer.https) return reject('HTTP NOT ENABLED');
+    return new Promise(async (resolve, reject) => {
+      if ((await self.getPluginConfig()).server === IWebServerConfigServer.https) return reject('HTTP NOT ENABLED');
       self.log.debug(`[HTTP_ONLY] initForPlugins [PUT]${ path }`);
       self.HTTPFastify.put(path, handler);
       self.log.debug(`[HTTP_ONLY] initForPlugins [PUT] OKAY`);
@@ -395,8 +395,8 @@ export class Plugin extends CPlugin<IWebServerConfig> {
     ContextConfigDefault>
   ): Promise<void> {
     const self = this;
-    return new Promise((resolve, reject) => {
-      if (self.getPluginConfig().server === IWebServerConfigServer.https) return reject('HTTP NOT ENABLED');
+    return new Promise(async (resolve, reject) => {
+      if ((await self.getPluginConfig()).server === IWebServerConfigServer.https) return reject('HTTP NOT ENABLED');
       self.log.debug(`[HTTP_ONLY] initForPlugins [DELETE]${ path }`);
       self.HTTPFastify.delete(path, handler);
       self.log.debug(`[HTTP_ONLY] initForPlugins [DELETE] OKAY`);
@@ -416,8 +416,8 @@ export class Plugin extends CPlugin<IWebServerConfig> {
     ContextConfigDefault>
   ): Promise<void> {
     const self = this;
-    return new Promise((resolve, reject) => {
-      if (self.getPluginConfig().server === IWebServerConfigServer.https) return reject('HTTP NOT ENABLED');
+    return new Promise(async (resolve, reject) => {
+      if ((await self.getPluginConfig()).server === IWebServerConfigServer.https) return reject('HTTP NOT ENABLED');
       self.log.debug(`[HTTP_ONLY] initForPlugins [PATCH]${ path }`);
       self.HTTPFastify.patch(path, handler);
       self.log.debug(`[HTTP_ONLY] initForPlugins [PATCH] OKAY`);
@@ -437,8 +437,8 @@ export class Plugin extends CPlugin<IWebServerConfig> {
     ContextConfigDefault>
   ): Promise<void> {
     const self = this;
-    return new Promise((resolve, reject) => {
-      if (self.getPluginConfig().server === IWebServerConfigServer.https) return reject('HTTP NOT ENABLED');
+    return new Promise(async (resolve, reject) => {
+      if ((await self.getPluginConfig()).server === IWebServerConfigServer.https) return reject('HTTP NOT ENABLED');
       self.log.debug(`[HTTP_ONLY] initForPlugins [OPTIONS]${ path }`);
       self.HTTPFastify.options(path, handler);
       self.log.debug(`[HTTP_ONLY] initForPlugins [OPTIONS] OKAY`);
@@ -458,8 +458,8 @@ export class Plugin extends CPlugin<IWebServerConfig> {
     ContextConfigDefault>
   ): Promise<void> {
     const self = this;
-    return new Promise((resolve, reject) => {
-      if (self.getPluginConfig().server === IWebServerConfigServer.https) return reject('HTTP NOT ENABLED');
+    return new Promise(async (resolve, reject) => {
+      if ((await self.getPluginConfig()).server === IWebServerConfigServer.https) return reject('HTTP NOT ENABLED');
       self.log.debug(`[HTTP_ONLY] initForPlugins [ALL]${ path }`);
       self.HTTPFastify.all(path, handler);
       self.log.debug(`[HTTP_ONLY] initForPlugins [ALL] OKAY`);
@@ -471,8 +471,8 @@ export class Plugin extends CPlugin<IWebServerConfig> {
   httpsRegister(plugin: FastifyPluginCallback<FastifyPluginOptions> | FastifyPluginAsync<FastifyPluginOptions> | Promise<{ default: FastifyPluginCallback<FastifyPluginOptions>; }> | Promise<{ default: FastifyPluginAsync<FastifyPluginOptions>; }>,
     opts?: FastifyRegisterOptions<FastifyPluginOptions>): Promise<void> {
     const self = this;
-    return new Promise((resolve, reject) => {
-      if (self.getPluginConfig().server === IWebServerConfigServer.http) return reject('HTTPS NOT ENABLED');
+    return new Promise(async (resolve, reject) => {
+      if ((await self.getPluginConfig()).server === IWebServerConfigServer.http) return reject('HTTPS NOT ENABLED');
       self.log.debug(`[HTTPS_ONLY] initForPlugins [USE]`);
       self.HTTPSFastify.register(plugin, opts);
       self.log.debug(`[HTTPS_ONLY] initForPlugins [USE] OKAY`);
@@ -492,8 +492,8 @@ export class Plugin extends CPlugin<IWebServerConfig> {
     ContextConfigDefault>
   ): Promise<void> {
     const self = this;
-    return new Promise((resolve, reject) => {
-      if (self.getPluginConfig().server === IWebServerConfigServer.http) return reject('HTTPS NOT ENABLED');
+    return new Promise(async (resolve, reject) => {
+      if ((await self.getPluginConfig()).server === IWebServerConfigServer.http) return reject('HTTPS NOT ENABLED');
       self.log.debug(`[HTTPS_ONLY] initForPlugins [HEAD]${ path }`);
       self.HTTPSFastify.head(path, handler);
       self.log.debug(`[HTTPS_ONLY] initForPlugins [HEAD] OKAY`);
@@ -513,8 +513,8 @@ export class Plugin extends CPlugin<IWebServerConfig> {
     ContextConfigDefault>
   ): Promise<void> {
     const self = this;
-    return new Promise((resolve, reject) => {
-      if (self.getPluginConfig().server === IWebServerConfigServer.http) return reject('HTTPS NOT ENABLED');
+    return new Promise(async (resolve, reject) => {
+      if ((await self.getPluginConfig()).server === IWebServerConfigServer.http) return reject('HTTPS NOT ENABLED');
       self.log.debug(`[HTTPS_ONLY] initForPlugins [GET]${ path }`);
       self.HTTPSFastify.get(path, handler);
       self.log.debug(`[HTTPS_ONLY] initForPlugins [GET] OKAY`);
@@ -534,8 +534,8 @@ export class Plugin extends CPlugin<IWebServerConfig> {
     ContextConfigDefault>
   ): Promise<void> {
     const self = this;
-    return new Promise((resolve, reject) => {
-      if (self.getPluginConfig().server === IWebServerConfigServer.http) return reject('HTTPS NOT ENABLED');
+    return new Promise(async (resolve, reject) => {
+      if ((await self.getPluginConfig()).server === IWebServerConfigServer.http) return reject('HTTPS NOT ENABLED');
       self.log.debug(`[HTTPS_ONLY] initForPlugins [POST]${ path }`);
       self.HTTPSFastify.post(path, handler);
       self.log.debug(`[HTTPS_ONLY] initForPlugins [POST] OKAY`);
@@ -555,8 +555,8 @@ export class Plugin extends CPlugin<IWebServerConfig> {
     ContextConfigDefault>
   ): Promise<void> {
     const self = this;
-    return new Promise((resolve, reject) => {
-      if (self.getPluginConfig().server === IWebServerConfigServer.http) return reject('HTTPS NOT ENABLED');
+    return new Promise(async (resolve, reject) => {
+      if ((await self.getPluginConfig()).server === IWebServerConfigServer.http) return reject('HTTPS NOT ENABLED');
       self.log.debug(`[HTTPS_ONLY] initForPlugins [PUT]${ path }`);
       self.HTTPSFastify.put(path, handler);
       self.log.debug(`[HTTPS_ONLY] initForPlugins [PUT] OKAY`);
@@ -576,8 +576,8 @@ export class Plugin extends CPlugin<IWebServerConfig> {
     ContextConfigDefault>
   ): Promise<void> {
     const self = this;
-    return new Promise((resolve, reject) => {
-      if (self.getPluginConfig().server === IWebServerConfigServer.http) return reject('HTTPS NOT ENABLED');
+    return new Promise(async (resolve, reject) => {
+      if ((await self.getPluginConfig()).server === IWebServerConfigServer.http) return reject('HTTPS NOT ENABLED');
       self.log.debug(`[HTTPS_ONLY] initForPlugins [DELETE]${ path }`);
       self.HTTPSFastify.delete(path, handler);
       self.log.debug(`[HTTPS_ONLY] initForPlugins [DELETE] OKAY`);
@@ -597,8 +597,8 @@ export class Plugin extends CPlugin<IWebServerConfig> {
     ContextConfigDefault>
   ): Promise<void> {
     const self = this;
-    return new Promise((resolve, reject) => {
-      if (self.getPluginConfig().server === IWebServerConfigServer.http) return reject('HTTPS NOT ENABLED');
+    return new Promise(async (resolve, reject) => {
+      if ((await self.getPluginConfig()).server === IWebServerConfigServer.http) return reject('HTTPS NOT ENABLED');
       self.log.debug(`[HTTPS_ONLY] initForPlugins [PATCH]${ path }`);
       self.HTTPSFastify.patch(path, handler);
       self.log.debug(`[HTTPS_ONLY] initForPlugins [PATCH] OKAY`);
@@ -618,8 +618,8 @@ export class Plugin extends CPlugin<IWebServerConfig> {
     ContextConfigDefault>
   ): Promise<void> {
     const self = this;
-    return new Promise((resolve, reject) => {
-      if (self.getPluginConfig().server === IWebServerConfigServer.http) return reject('HTTPS NOT ENABLED');
+    return new Promise(async (resolve, reject) => {
+      if ((await self.getPluginConfig()).server === IWebServerConfigServer.http) return reject('HTTPS NOT ENABLED');
       self.log.debug(`[HTTPS_ONLY] initForPlugins [OPTIONS]${ path }`);
       self.HTTPSFastify.options(path, handler);
       self.log.debug(`[HTTPS_ONLY] initForPlugins [OPTIONS] OKAY`);
@@ -639,8 +639,8 @@ export class Plugin extends CPlugin<IWebServerConfig> {
     ContextConfigDefault>
   ): Promise<void> {
     const self = this;
-    return new Promise((resolve, reject) => {
-      if (self.getPluginConfig().server === IWebServerConfigServer.http) return reject('HTTPS NOT ENABLED');
+    return new Promise(async (resolve, reject) => {
+      if ((await self.getPluginConfig()).server === IWebServerConfigServer.http) return reject('HTTPS NOT ENABLED');
       self.log.debug(`[HTTPS_ONLY] initForPlugins [ALL]${ path }`);
       self.HTTPSFastify.all(path, handler);
       self.log.debug(`[HTTPS_ONLY] initForPlugins [ALL] OKAY`);

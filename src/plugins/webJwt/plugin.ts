@@ -32,19 +32,19 @@ export class Plugin extends CPlugin<IEJWTPluginConfig>{
   public readonly initIndex: number = -999997;
   init(): Promise<void> {
     const self = this;
-    return new Promise((resolve) => {
+    return new Promise(async (resolve) => {
       self.JWTClient = jwksClient({
-        jwksUri: self.getPluginConfig().keyUrl
+        jwksUri: (await self.getPluginConfig()).keyUrl
       });
-      self.onReturnableEvent(null, `${ WebJWTEvents.validateToken }-${ self.getPluginConfig().authKey }`, (a, b, c) => self.validateToken(a, b, c));
-      self.log.info(`JWT Ready with pub keys: ${ self.getPluginConfig().keyUrl } and related auth: ${ self.getPluginConfig().authKey }`);
+      self.onReturnableEvent(null, `${ WebJWTEvents.validateToken }-${ (await self.getPluginConfig()).authKey }`, (a, b, c) => self.validateToken(a, b, c));
+      self.log.info(`JWT Ready with pub keys: ${ (await self.getPluginConfig()).keyUrl } and related auth: ${ (await self.getPluginConfig()).authKey }`);
       resolve();
     });
   }
 
-  validateToken(resolve: any, reject: any, data: string) {
+  async validateToken(resolve: any, reject: any, data: string) {
     const self = this;
-    jsonwebtoken.verify(data, (a, b) => { self.getJWTKey(a, b); }, self.getPluginConfig().options, (err: any, decoded: any) => {
+    jsonwebtoken.verify(data, (a, b) => { self.getJWTKey(a, b); }, (await self.getPluginConfig()).options, (err: any, decoded: any) => {
       if (err) {
         self.log.warn('*authorization: failed error');
         self.log.error(err);

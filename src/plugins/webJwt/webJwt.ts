@@ -23,7 +23,7 @@ export class webJwtExpress extends CPluginClient<IEJWTPluginConfig> {
 
   async verifyQuiet(req: ExpressRequest, res: ExpressResponse, tokenType: EJWTTokenType = EJWTTokenType.req): Promise<any> {
     const self = this;
-    return new Promise((resolve, reject) => {
+    return new Promise(async (resolve, reject) => {
       let foundToken: string | null = null;
       if (tokenType === EJWTTokenType.req || tokenType === EJWTTokenType.reqOrQuery) {
         if (`${ req.headers.authorization }`.indexOf('Bearer ') === 0) {
@@ -33,10 +33,10 @@ export class webJwtExpress extends CPluginClient<IEJWTPluginConfig> {
         }
       }
       if (foundToken === null && (tokenType === EJWTTokenType.query || tokenType === EJWTTokenType.reqOrQuery)) {
-        if (Tools.isNullOrUndefined(req.query) || Tools.isNullOrUndefined(req.query[self.getPluginConfig().queryKey])) {
+        if (Tools.isNullOrUndefined(req.query) || Tools.isNullOrUndefined(req.query[(await self.getPluginConfig()).queryKey])) {
           self.refPlugin.log.warn('*authorization: failed no query passtk');
         } else {
-          foundToken = decodeURIComponent(`${ req.query[self.getPluginConfig().queryKey] }`);
+          foundToken = decodeURIComponent(`${ req.query[(await self.getPluginConfig()).queryKey] }`);
         }
       }
 
@@ -45,7 +45,7 @@ export class webJwtExpress extends CPluginClient<IEJWTPluginConfig> {
         return resolve(false);
       }
 
-      self.emitEventAndReturn(`${ WebJWTEvents.validateToken }-${ self.getPluginConfig().authKey }`, foundToken).then(resolve).catch(() => {
+      self.emitEventAndReturn(`${ WebJWTEvents.validateToken }-${ (await self.getPluginConfig()).authKey }`, foundToken).then(resolve).catch(() => {
         self.refPlugin.log.warn('*authorization: failed');
         return resolve(false);
       });
@@ -70,7 +70,7 @@ export class webJwtFastify extends CPluginClient<IEJWTPluginConfig> {
 
   async verifyQuiet(req: FastifyRequest<any>, reply: FastifyReply, tokenType: EJWTTokenType = EJWTTokenType.req): Promise<any> {
     const self = this;
-    return new Promise((resolve, reject) => {
+    return new Promise(async (resolve, reject) => {
       let foundToken: string | null = null;
       if (tokenType === EJWTTokenType.req || tokenType === EJWTTokenType.reqOrQuery) {
         if (`${ req.headers.authorization }`.indexOf('Bearer ') === 0) {
@@ -80,10 +80,10 @@ export class webJwtFastify extends CPluginClient<IEJWTPluginConfig> {
         }
       }
       if (foundToken === null && (tokenType === EJWTTokenType.query || tokenType === EJWTTokenType.reqOrQuery)) {
-        if (Tools.isNullOrUndefined(req.query) || Tools.isNullOrUndefined(req.query[self.getPluginConfig().queryKey])) {
+        if (Tools.isNullOrUndefined(req.query) || Tools.isNullOrUndefined(req.query[(await self.getPluginConfig()).queryKey])) {
           self.refPlugin.log.warn('*authorization: failed no query passtk');
         } else {
-          foundToken = decodeURIComponent(`${ req.query[self.getPluginConfig().queryKey] }`);
+          foundToken = decodeURIComponent(`${ req.query[(await self.getPluginConfig()).queryKey] }`);
         }
       }
 
@@ -92,7 +92,7 @@ export class webJwtFastify extends CPluginClient<IEJWTPluginConfig> {
         return resolve(false);
       }
 
-      self.emitEventAndReturn(`${ WebJWTEvents.validateToken }-${ self.getPluginConfig().authKey }`, foundToken).then(resolve).catch(() => {
+      self.emitEventAndReturn(`${ WebJWTEvents.validateToken }-${ (await self.getPluginConfig()).authKey }`, foundToken).then(resolve).catch(() => {
         self.refPlugin.log.warn('*authorization: failed');
         return resolve(false);
       });
@@ -110,6 +110,6 @@ export class webJwt extends CPluginClient<IEJWTPluginConfig> {
   }
 
   async validateToken(token: string): Promise<any> {
-    return this.emitEventAndReturn(`${ WebJWTEvents.validateToken }-${ this.getPluginConfig().authKey }`, token);
+    return this.emitEventAndReturn(`${ WebJWTEvents.validateToken }-${ (await this.getPluginConfig()).authKey }`, token);
   }
 }
