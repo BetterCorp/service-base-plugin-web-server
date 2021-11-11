@@ -21,7 +21,6 @@ export interface IEJWTPluginConfig {
   queryKey: string;
   options: VerifyOptions;
   tokenLifespanMinutes: number;
-  issuer: string | null;
 }
 
 export default (pluginName: string, existingPluginConfig: any): IEJWTPluginConfig => {
@@ -38,7 +37,6 @@ export default (pluginName: string, existingPluginConfig: any): IEJWTPluginConfi
       issuer: "/auth/realms/RealmName",
       audience: "account"
     },
-    issuer: null,
     tokenLifespanMinutes: 60
   };
 };
