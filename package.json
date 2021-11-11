@@ -18,6 +18,7 @@
     "@bettercorp/service-base": "^6.0.20211016180933",
     "@bettercorp/tools": "^1.1.20210611181403",
     "@types/node": "^14.17.27",
+    "bcrypt": "^5.0.1",
     "express": "^4.17.1",
     "express-fileupload": "^1.2.1",
     "fastify": "^3.22.0",
@@ -28,6 +29,7 @@
     "jwks-rsa": "^1.12.3"
   },
   "devDependencies": {
+    "@types/bcrypt": "^5.0.0",
     "@types/jsonwebtoken": "^8.5.5",
     "ts-node": "^10.3.0",
     "tslint": "^6.1.3",

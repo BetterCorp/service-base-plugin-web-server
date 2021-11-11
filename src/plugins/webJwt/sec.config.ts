@@ -1,6 +1,7 @@
 import { VerifyOptions } from 'jsonwebtoken';
-
 import { Request, Response } from 'express';
+import * as bcrypt from 'bcrypt';
+
 export interface IExpressJWTInit {
   req: Request,
   res: Response,
@@ -28,8 +29,8 @@ export default (pluginName: string, existingPluginConfig: any): IEJWTPluginConfi
     keyUrl: "/auth/realms/RealmName/protocol/openid-connect/certs",
     clientCanResolveLocally: false,
     bearerStr: "Bearer",
-    authKey: "notset",
-    secretKey: "notset",
+    authKey: bcrypt.genSaltSync(8),
+    secretKey: bcrypt.genSaltSync(8),
     queryKey: "passtk",
     authType: IEJWTPluginAuthType.JWTCERTS,
     options: {
