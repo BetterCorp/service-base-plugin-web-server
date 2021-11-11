@@ -13,7 +13,7 @@
     "lib/**/*"
   ],
   "main": "lib/index.js",
-  "version": "3.0.0",
+  "version": "3.1.0",
   "dependencies": {
     "@bettercorp/service-base": "^6.0.20211016180933",
     "@bettercorp/tools": "^1.1.20210611181403",
