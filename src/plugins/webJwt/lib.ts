@@ -3,12 +3,12 @@ import { Tools } from '@bettercorp/tools/lib/Tools';
 import * as jsonwebtoken from 'jsonwebtoken';
 import * as jwksClient from 'jwks-rsa';
 import { WebJWTEvents } from '../../lib';
-import { IEJWTPluginAuthType } from './sec.config';
+import { IEJWTPluginAuthType, IEJWTPluginConfig } from './sec.config';
 
 export class JWTLib {
   private JWTClient!: jwksClient.JwksClient;
-  private uSelf!: CPlugin | CPluginClient<any>;
-  async init(uSelf: CPlugin | CPluginClient<any>): Promise<JWTLib> {
+  private uSelf!: CPlugin<IEJWTPluginConfig> | CPluginClient<IEJWTPluginConfig>;
+  async init(uSelf: CPlugin<IEJWTPluginConfig> | CPluginClient<IEJWTPluginConfig>): Promise<JWTLib> {
     this.uSelf = uSelf;
     if ((await uSelf.getPluginConfig()).authType === IEJWTPluginAuthType.JWTCERTS)
       this.JWTClient = jwksClient({
@@ -36,9 +36,13 @@ export class JWTLib {
       });
     }
     if ((await self.getPluginConfig()).authType === IEJWTPluginAuthType.JWTCERTS) {
-      return jsonwebtoken.verify(data, (a, b) => { aSelf.getJWTKey(a, b); }, (await self.getPluginConfig()).options, (err: any, decoded: any) => {
+      return jsonwebtoken.verify(data, (a, b) => { aSelf.getJWTKey(a, b); }, (await self.getPluginConfig()).options, async (err: any, decoded: any) => {
         if (err) {
           return reject();
+        }
+        if (!Tools.isNullOrUndefined((await self.getPluginConfig()).issuer)) {
+          if (decoded.iss !== (await self.getPluginConfig()).issuer)
+            return reject();
         }
         resolve({
           ...decoded,
@@ -49,6 +53,10 @@ export class JWTLib {
     try {
       let decoded = jsonwebtoken.verify(data, (await self.getPluginConfig()).secretKey!, (await self.getPluginConfig()).options);
       if (Tools.isString(decoded)) throw 'Invalid token';
+      if (!Tools.isNullOrUndefined((await self.getPluginConfig()).issuer)) {
+        if ((decoded as jsonwebtoken.JwtPayload).iss !== (await self.getPluginConfig()).issuer)
+          throw 'Invalid token';
+      }
       resolve({
         ...(decoded as jsonwebtoken.JwtPayload),
         _from: 'token'
@@ -56,5 +64,13 @@ export class JWTLib {
     } catch (xcc) {
       return reject();
     }
+  }
+
+  async signTokenSecretKey(tokenData: any, userId: string) {
+    return jsonwebtoken.sign(tokenData, (await this.uSelf.getPluginConfig()).secretKey, {
+      expiresIn: (60 * (await this.uSelf.getPluginConfig()).tokenLifespanMinutes),
+      issuer: (await this.uSelf.getPluginConfig()).issuer || ((this.uSelf as CPluginClient<any>).refPlugin || this.uSelf || {}).pluginName || 'bsb-jwt',
+      subject: userId
+    });
   }
 }

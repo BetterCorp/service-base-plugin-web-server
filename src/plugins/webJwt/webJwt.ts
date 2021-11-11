@@ -134,4 +134,9 @@ export class webJwt extends CPluginClient<IEJWTPluginConfig> {
       (await self.getJWTLib()).validateToken(resolve, () => reject(false), token, (await self.getPluginConfig()).clientCanResolveLocally);
     });
   }
+
+  async signTokenSecretKey(tokenData: any, userId: string) {
+    const self = this;
+    return new Promise(async (resolve, reject) => (await self.getJWTLib()).signTokenSecretKey(tokenData, userId).then(resolve).catch(reject));
+  }
 }

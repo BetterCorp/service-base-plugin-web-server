@@ -12,28 +12,32 @@ export enum IEJWTPluginAuthType {
 }
 export interface IEJWTPluginConfig {
   clientCanResolveLocally: boolean;
-  keyUrl?: string;
+  keyUrl: string;
   bearerStr: string;
   authKey: string;
-  secretKey?: string;
+  secretKey: string;
   authType: IEJWTPluginAuthType;
   queryKey: string;
   options: VerifyOptions;
+  tokenLifespanMinutes: number;
+  issuer: string | null;
 }
 
 export default (pluginName: string, existingPluginConfig: any): IEJWTPluginConfig => {
   return {
-    "keyUrl": "/auth/realms/RealmName/protocol/openid-connect/certs",
-    "clientCanResolveLocally": false,
-    "bearerStr": "Bearer",
-    "authKey": "notset",
-    "secretKey": "notset",
-    "queryKey": "passtk",
-    "authType": IEJWTPluginAuthType.JWTCERTS,
-    "options": {
-      "algorithms": ["RS256"],
-      "issuer": "/auth/realms/RealmName",
-      "audience": "account"
-    }
+    keyUrl: "/auth/realms/RealmName/protocol/openid-connect/certs",
+    clientCanResolveLocally: false,
+    bearerStr: "Bearer",
+    authKey: "notset",
+    secretKey: "notset",
+    queryKey: "passtk",
+    authType: IEJWTPluginAuthType.JWTCERTS,
+    options: {
+      algorithms: ["RS256"],
+      issuer: "/auth/realms/RealmName",
+      audience: "account"
+    },
+    issuer: null,
+    tokenLifespanMinutes: 60
   };
 };
