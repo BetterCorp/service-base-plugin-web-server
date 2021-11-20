@@ -38,11 +38,16 @@ export class webJwtExpress extends CPluginClient<IEJWTPluginConfig> {
           foundToken = `${ req.headers.authorization }`.split(' ')[1];
         } else {
           self.refPlugin.log.warn('*authorization: no header');
+          self.refPlugin.log.debug(req.headers);
+          self.refPlugin.log.debug(req.headers.authorization);
+          self.refPlugin.log.debug((await self.getPluginConfig()).bearerStr);
         }
       }
       if (foundToken === null && (tokenType === EJWTTokenType.query || tokenType === EJWTTokenType.reqOrQuery)) {
         if (Tools.isNullOrUndefined(req.query) || Tools.isNullOrUndefined(req.query[(await self.getPluginConfig()).queryKey])) {
           self.refPlugin.log.warn('*authorization: failed no query passtk');
+          self.refPlugin.log.debug(req.query);
+          self.refPlugin.log.debug((await self.getPluginConfig()).queryKey);
         } else {
           foundToken = decodeURIComponent(`${ req.query[(await self.getPluginConfig()).queryKey] }`);
         }
@@ -50,6 +55,7 @@ export class webJwtExpress extends CPluginClient<IEJWTPluginConfig> {
 
       if (Tools.isNullOrUndefined(foundToken) || foundToken == "") {
         self.refPlugin.log.warn('*authorization: failed no token');
+        self.refPlugin.log.debug(foundToken);
         return resolve(false);
       }
 
@@ -90,11 +96,16 @@ export class webJwtFastify extends CPluginClient<IEJWTPluginConfig> {
           foundToken = `${ req.headers.authorization }`.split(' ')[1];
         } else {
           self.refPlugin.log.warn('*authorization: no header');
+          self.refPlugin.log.debug(req.headers);
+          self.refPlugin.log.debug(req.headers.authorization);
+          self.refPlugin.log.debug((await self.getPluginConfig()).bearerStr);
         }
       }
       if (foundToken === null && (tokenType === EJWTTokenType.query || tokenType === EJWTTokenType.reqOrQuery)) {
         if (Tools.isNullOrUndefined(req.query) || Tools.isNullOrUndefined(req.query[(await self.getPluginConfig()).queryKey])) {
           self.refPlugin.log.warn('*authorization: failed no query passtk');
+          self.refPlugin.log.debug(req.query);
+          self.refPlugin.log.debug((await self.getPluginConfig()).queryKey);
         } else {
           foundToken = decodeURIComponent(`${ req.query[(await self.getPluginConfig()).queryKey] }`);
         }
@@ -102,6 +113,7 @@ export class webJwtFastify extends CPluginClient<IEJWTPluginConfig> {
 
       if (Tools.isNullOrUndefined(foundToken) || foundToken == "") {
         self.refPlugin.log.warn('*authorization: failed no token');
+        self.refPlugin.log.debug(foundToken);
         return resolve(false);
       }
 
@@ -126,6 +138,9 @@ export class webJwt extends CPluginClient<IEJWTPluginConfig> {
     super(self);
     this.express = new webJwtExpress(self);
     this.fastify = new webJwtFastify(self);
+    this.pluginName().then(async pluginName => {
+      this.refPlugin.log.debug(`Running mapped as ${ this._pluginName }: ${ pluginName } / appConfigDirectly: ${ await this.refPlugin.appConfig.getMappedPluginName(this._pluginName) }`);
+    }).catch(this.refPlugin.log.warn);
   }
 
   async validateToken(token: string): Promise<any> {
