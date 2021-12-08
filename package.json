@@ -8,7 +8,7 @@
     "build": "tsc",
     "version": "node ./node_modules/@bettercorp/service-base/build/version-bcorp.js $0",
     "create": "ts-node node_modules/@bettercorp/service-base/lib/bootstrap.js $0",
-    "dev": "nodemon -L --watch src/**/*.ts --watch sec.config.json --exec ts-node node_modules/@bettercorp/service-base/lib/index.js",
+    "dev": "nodemon --config node_modules/@bettercorp/service-base/build/nodemon.json",
     "start": "ts-node node_modules/@bettercorp/service-base/lib/index.js"
   },
   "files": [
@@ -17,13 +17,13 @@
   "main": "lib/index.js",
   "version": "3.2.0",
   "dependencies": {
-    "@bettercorp/service-base": "^6.0.20211120135115",
+    "@bettercorp/service-base": "^6.0.20211207233924",
     "@bettercorp/tools": "^1.2.20211118015545",
-    "@types/node": "^16.11.9",
+    "@types/node": "^16.11.12",
     "bcrypt": "^5.0.1",
     "express": "^4.17.1",
     "express-fileupload": "^1.2.1",
-    "fastify": "^3.24.0",
+    "fastify": "^3.24.1",
     "fastify-cors": "^6.0.2",
     "fastify-plugin": "^3.0.0",
     "fastify-rate-limit": "^5.6.2",
@@ -33,9 +33,9 @@
   "devDependencies": {
     "@types/bcrypt": "^5.0.0",
     "@types/jsonwebtoken": "^8.5.6",
-    "@typescript-eslint/eslint-plugin": "^5.4.0",
-    "@typescript-eslint/parser": "^5.4.0",
-    "eslint": "^8.2.0",
+    "@typescript-eslint/eslint-plugin": "^5.6.0",
+    "@typescript-eslint/parser": "^5.6.0",
+    "eslint": "^8.4.1",
     "ts-node": "^10.4.0",
     "typescript": "^4.5.2"
   },
