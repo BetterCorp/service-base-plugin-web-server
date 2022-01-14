@@ -1,4 +1,4 @@
-import { CPlugin, CPluginClient } from '@bettercorp/service-base/lib/ILib';
+import { CPlugin, CPluginClient } from '@bettercorp/service-base/lib/interfaces/plugins';
 import { Tools } from '@bettercorp/tools/lib/Tools';
 import * as jsonwebtoken from 'jsonwebtoken';
 import * as jwksClient from 'jwks-rsa';
@@ -28,53 +28,55 @@ export class JWTLib {
     });
   }
 
-  async validateToken(resolve: any, reject: any, data: string, local: boolean) {
+  async validateToken(data: string, local: boolean) {
     const self = this.uSelf;
     const aSelf = this;
-    if (!local) {
-      return self.emitEventAndReturn(`${ WebJWTEvents.validateToken }-${ (await self.getPluginConfig()).authKey }`, data).then(resolve).catch(() => {
-        return resolve(false);
-      });
-    }
-    if ((await self.getPluginConfig()).authType === IEJWTPluginAuthType.JWTCERTS) {
-      return jsonwebtoken.verify(data, (a, b) => { aSelf.getJWTKey(a, b); }, (await self.getPluginConfig()).options, async (err: any, decoded: any) => {
-        if (err) {
-          return reject();
-        }
-        if (!Tools.isNullOrUndefined((await self.getPluginConfig()).options.issuer)) {
+    return new Promise(async (resolve: any, reject: any) => {
+      if (!local) {
+        return self.emitEventAndReturn(`${ WebJWTEvents.validateToken }-${ (await self.getPluginConfig()).authKey }`, data).then(resolve).catch(() => {
+          return resolve(false);
+        });
+      }
+      if ((await self.getPluginConfig()).authType === IEJWTPluginAuthType.JWTCERTS) {
+        return jsonwebtoken.verify(data, (a, b) => { aSelf.getJWTKey(a, b); }, (await self.getPluginConfig()).options, async (err: any, decoded: any) => {
+          if (err) {
+            return reject();
+          }
+          if (!Tools.isNullOrUndefined((await self.getPluginConfig()).options.issuer)) {
+            if (Tools.isArray((await this.uSelf.getPluginConfig()).options.issuer)) {
+              if (((await this.uSelf.getPluginConfig()).options.issuer as Array<string>).indexOf((decoded as jsonwebtoken.JwtPayload).iss || bcrypt.genSaltSync(8)) < 0)
+                return reject();
+            } else {
+              if ((decoded as jsonwebtoken.JwtPayload).iss !== (await self.getPluginConfig()).options.issuer)
+                return reject();
+            }
+          }
+          resolve({
+            ...decoded,
+            _from: 'token'
+          });
+        });
+      }
+      try {
+        let decoded = jsonwebtoken.verify(data, (await self.getPluginConfig()).secretKey!, (await self.getPluginConfig()).options);
+        if (Tools.isString(decoded)) throw 'Invalid token';
+        if (!Tools.isNullOrUndefined((await this.uSelf.getPluginConfig()).options.issuer)) {
           if (Tools.isArray((await this.uSelf.getPluginConfig()).options.issuer)) {
             if (((await this.uSelf.getPluginConfig()).options.issuer as Array<string>).indexOf((decoded as jsonwebtoken.JwtPayload).iss || bcrypt.genSaltSync(8)) < 0)
-              return reject();
+              throw 'Invalid token';
           } else {
             if ((decoded as jsonwebtoken.JwtPayload).iss !== (await self.getPluginConfig()).options.issuer)
-              return reject();
+              throw 'Invalid token';
           }
         }
         resolve({
-          ...decoded,
+          ...(decoded as jsonwebtoken.JwtPayload),
           _from: 'token'
         });
-      });
-    }
-    try {
-      let decoded = jsonwebtoken.verify(data, (await self.getPluginConfig()).secretKey!, (await self.getPluginConfig()).options);
-      if (Tools.isString(decoded)) throw 'Invalid token';
-      if (!Tools.isNullOrUndefined((await this.uSelf.getPluginConfig()).options.issuer)) {
-        if (Tools.isArray((await this.uSelf.getPluginConfig()).options.issuer)) {
-          if (((await this.uSelf.getPluginConfig()).options.issuer as Array<string>).indexOf((decoded as jsonwebtoken.JwtPayload).iss || bcrypt.genSaltSync(8)) < 0)
-            throw 'Invalid token';
-        } else {
-          if ((decoded as jsonwebtoken.JwtPayload).iss !== (await self.getPluginConfig()).options.issuer)
-            throw 'Invalid token';
-        }
+      } catch (xcc) {
+        return reject();
       }
-      resolve({
-        ...(decoded as jsonwebtoken.JwtPayload),
-        _from: 'token'
-      });
-    } catch (xcc) {
-      return reject();
-    }
+    });
   }
 
   async signTokenSecretKey(tokenData: any, userId: string) {

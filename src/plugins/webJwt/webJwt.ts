@@ -1,4 +1,4 @@
-import { CPluginClient, IPlugin } from '@bettercorp/service-base/lib/ILib';
+import { CPluginClient, IPlugin } from '@bettercorp/service-base/lib/interfaces/plugins';
 import { Tools } from '@bettercorp/tools/lib/Tools';
 import { EJWTTokenType } from './plugin';
 import { IEJWTPluginConfig } from './sec.config';
@@ -59,7 +59,7 @@ export class webJwtExpress extends CPluginClient<IEJWTPluginConfig> {
         return resolve(false);
       }
 
-      (await self.getJWTLib()).validateToken(resolve, () => reject(false), foundToken!, (await self.getPluginConfig()).clientCanResolveLocally);
+      (await self.getJWTLib()).validateToken(foundToken!, (await self.getPluginConfig()).clientCanResolveLocally).then(resolve).catch(() => reject(false));
     });
   }
 }
@@ -117,7 +117,7 @@ export class webJwtFastify extends CPluginClient<IEJWTPluginConfig> {
         return resolve(false);
       }
 
-      (await self.getJWTLib()).validateToken(resolve, () => reject(false), foundToken!, (await self.getPluginConfig()).clientCanResolveLocally);
+      (await self.getJWTLib()).validateToken(foundToken!, (await self.getPluginConfig()).clientCanResolveLocally).then(resolve).catch(() => reject(false));
     });
   }
 }
@@ -145,9 +145,7 @@ export class webJwt extends CPluginClient<IEJWTPluginConfig> {
 
   async validateToken(token: string): Promise<any> {
     const self = this;
-    return new Promise(async (resolve, reject) => {
-      (await self.getJWTLib()).validateToken(resolve, () => reject(false), token, (await self.getPluginConfig()).clientCanResolveLocally);
-    });
+    return new Promise(async (resolve, reject) => (await self.getJWTLib()).validateToken(token, (await self.getPluginConfig()).clientCanResolveLocally).then(resolve).catch(() => reject(false)));
   }
 
   async signTokenSecretKey(tokenData: any, userId: string) {

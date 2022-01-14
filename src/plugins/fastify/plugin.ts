@@ -1,4 +1,4 @@
-import { CPlugin } from '@bettercorp/service-base/lib/ILib';
+import { CPlugin } from '@bettercorp/service-base/lib/interfaces/plugins';
 import { FastifyRequestInterface, IWebServerConfig, IWebServerConfigServer, IWebServerListenerHelper } from './lib';
 //import fastify from 'fastify';
 import { readFileSync } from 'fs';

@@ -1,4 +1,4 @@
-import { CPlugin } from '@bettercorp/service-base/lib/ILib';
+import { CPlugin } from '@bettercorp/service-base/lib/interfaces/plugins';
 import { IWebServerConfig, IWebServerConfigServer, IWebServerListenerHelper } from './lib';
 import * as EXPRESS from 'express';
 import { Express } from 'express';

@@ -1,4 +1,4 @@
-import { CPlugin } from '@bettercorp/service-base/lib/ILib';
+import { CPlugin } from '@bettercorp/service-base/lib/interfaces/plugins';
 import { FastifyInstance } from 'fastify';
 import fp from 'fastify-plugin';
 

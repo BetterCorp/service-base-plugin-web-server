@@ -1,4 +1,4 @@
-import { CPlugin } from '@bettercorp/service-base/lib/ILib';
+import { CPlugin } from '@bettercorp/service-base/lib/interfaces/plugins';
 import { WebJWTEvents } from '../../lib';
 import { JWTLib } from './lib';
 import { IEJWTPluginAuthType, IEJWTPluginConfig } from './sec.config';
@@ -18,7 +18,7 @@ export class Plugin extends CPlugin<IEJWTPluginConfig>{
     return new Promise(async (resolve) => {
       self.JWTLib = await (new JWTLib()).init(self);
 
-      self.onReturnableEvent(null, `${ WebJWTEvents.validateToken }-${ (await self.getPluginConfig()).authKey }`, (a, b, c) => self.JWTLib.validateToken(a, b, c, true));
+      self.onReturnableEvent(null, `${ WebJWTEvents.validateToken }-${ (await self.getPluginConfig()).authKey }`, (data) => self.JWTLib.validateToken(data, true));
       if ((await self.getPluginConfig()).authType === IEJWTPluginAuthType.JWTCERTS)
         self.log.info(`JWT Ready with pub keys: ${ (await self.getPluginConfig()).keyUrl } and related auth: ${ (await self.getPluginConfig()).authKey }`);
       else
