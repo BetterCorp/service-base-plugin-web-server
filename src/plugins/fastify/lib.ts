@@ -1,5 +1,5 @@
 import {
-  FastifyInstance, RequestHeadersDefault, RequestGenericInterface,
+  FastifyInstance, RequestGenericInterface,
   RequestParamsDefault, RequestQuerystringDefault
 } from 'fastify';
 import { FastifyCorsOptions } from 'fastify-cors';
