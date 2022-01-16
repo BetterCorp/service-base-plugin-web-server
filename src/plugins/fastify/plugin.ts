@@ -11,11 +11,14 @@ import {
 import fastifyBsbLogger from './logger';
 import fastifyCors from 'fastify-cors';
 import fastifyRateLimit from 'fastify-rate-limit';
+import fastifyIP from './ipHandlerPlugin';
 import { hostname } from 'os';
+import { Server as HServer } from 'http';
+import { Server as HSServer } from 'https';
 
 export class Plugin extends CPlugin<IWebServerConfig> {
-  private HTTPFastify!: FastifyInstance;
-  private HTTPSFastify!: FastifyInstance;
+  private HTTPFastify!: FastifyInstance<HServer>;
+  private HTTPSFastify!: FastifyInstance<HSServer>;
   public readonly initIndex: number = Number.MIN_SAFE_INTEGER;
   init(): Promise<void> {
     const self = this;
@@ -46,6 +49,10 @@ export class Plugin extends CPlugin<IWebServerConfig> {
       if ((await self.getPluginConfig()).rateLimit.enabled) {
         self.log.info(`Enabled Rate Limit Service`);
         self.register(fastifyRateLimit, (await self.getPluginConfig()).rateLimit.options);
+      }
+      if ((await self.getPluginConfig()).ipRewrite) {
+        self.log.info(`Enabled IP Service`);
+        self.register(fastifyIP);
       }
       self.get('/health', (req, res) => {
         res.header('Content-Type', 'application/json');
@@ -90,11 +97,11 @@ export class Plugin extends CPlugin<IWebServerConfig> {
   }
 
   // DYNAMIC HANDLING
-  public async getServerInstance(): Promise<FastifyInstance> {
+  public async getServerInstance(): Promise<FastifyInstance<HServer | HSServer>> {
     return (await this.getServerToListenTo()).server;
   }
   private async getServerToListenTo(): Promise<IWebServerListenerHelper> {
-    let serverToListenOn = {
+    let serverToListenOn: IWebServerListenerHelper = {
       server: this.HTTPSFastify,
       type: "HTTPS"
     };

@@ -29,6 +29,7 @@ export interface IWebServerConfig {
   //http2: boolean;
   cors: FastifyCors;
   rateLimit: FastifyRateLimit;
+  ipRewrite: boolean;
 }
 export interface IWebServerInitPlugin {
   arg1: any;
