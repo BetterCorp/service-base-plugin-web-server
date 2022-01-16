@@ -1,11 +1,11 @@
 import { CPlugin } from '@bettercorp/service-base/lib/interfaces/plugins';
-import { FastifyRequestInterface, IWebServerConfig, IWebServerConfigServer, IWebServerListenerHelper } from './lib';
+import { FastifyHeadersWithIP, FastifyRequestInterface, IWebServerConfig, IWebServerConfigServer, IWebServerListenerHelper } from './lib';
 //import fastify from 'fastify';
 import { readFileSync } from 'fs';
 import {
   ContextConfigDefault, fastify, FastifyInstance, FastifyPluginAsync, FastifyPluginCallback, FastifyPluginOptions,
-  FastifyRegisterOptions, FastifyReply, FastifyRequest, RawReplyDefaultExpression, RawRequestDefaultExpression,
-  RawServerBase, RequestHeadersDefault, RequestParamsDefault, RequestQuerystringDefault,
+  FastifyRegisterOptions, RawReplyDefaultExpression, RawRequestDefaultExpression,
+  RawServerBase, RequestParamsDefault, RequestQuerystringDefault,
   RouteHandlerMethod
 } from 'fastify';
 import fastifyBsbLogger from './logger';
@@ -87,7 +87,7 @@ export class Plugin extends CPlugin<IWebServerConfig> {
         self.log.info(`[HTTPS] Server started ${ (await self.getPluginConfig()).host }:${ (await self.getPluginConfig()).httpsPort }`);
       }
       if ((await self.getPluginConfig()).server === IWebServerConfigServer.httpAndHttps && (await self.getPluginConfig()).httpToHttpsRedirect) {
-        self.HTTPFastify.get('/*', async (req: FastifyRequest, reply: FastifyReply) => {
+        self.HTTPFastify.get('/*', async (req, reply) => {
           reply.redirect(301, `https://${ req.hostname }:${ (await self.getPluginConfig()).httpsPort }${ req.url }`);
         });
         self.log.info(`[HTTP] Server redirect: ${ (await self.getPluginConfig()).host }:${ (await self.getPluginConfig()).httpPort }`);
@@ -128,7 +128,7 @@ export class Plugin extends CPlugin<IWebServerConfig> {
     Body = any,
     Params = RequestParamsDefault,
     Querystring = RequestQuerystringDefault,
-    Headers = RequestHeadersDefault
+    Headers = FastifyHeadersWithIP
   >(path: string, handler: RouteHandlerMethod<
     RawServerBase,
     RawRequestDefaultExpression<RawServerBase>,
@@ -149,7 +149,7 @@ export class Plugin extends CPlugin<IWebServerConfig> {
     Body = any,
     Params = RequestParamsDefault,
     Querystring = RequestQuerystringDefault,
-    Headers = RequestHeadersDefault
+    Headers = FastifyHeadersWithIP
   >(path: string, handler: RouteHandlerMethod<
     RawServerBase,
     RawRequestDefaultExpression<RawServerBase>,
@@ -170,7 +170,7 @@ export class Plugin extends CPlugin<IWebServerConfig> {
     Body = any,
     Params = RequestParamsDefault,
     Querystring = RequestQuerystringDefault,
-    Headers = RequestHeadersDefault
+    Headers = FastifyHeadersWithIP
   >(path: string, handler: RouteHandlerMethod<
     RawServerBase,
     RawRequestDefaultExpression<RawServerBase>,
@@ -191,7 +191,7 @@ export class Plugin extends CPlugin<IWebServerConfig> {
     Body = any,
     Params = RequestParamsDefault,
     Querystring = RequestQuerystringDefault,
-    Headers = RequestHeadersDefault
+    Headers = FastifyHeadersWithIP
   >(path: string, handler: RouteHandlerMethod<
     RawServerBase,
     RawRequestDefaultExpression<RawServerBase>,
@@ -212,7 +212,7 @@ export class Plugin extends CPlugin<IWebServerConfig> {
     Body = any,
     Params = RequestParamsDefault,
     Querystring = RequestQuerystringDefault,
-    Headers = RequestHeadersDefault
+    Headers = FastifyHeadersWithIP
   >(path: string, handler: RouteHandlerMethod<
     RawServerBase,
     RawRequestDefaultExpression<RawServerBase>,
@@ -233,7 +233,7 @@ export class Plugin extends CPlugin<IWebServerConfig> {
     Body = any,
     Params = RequestParamsDefault,
     Querystring = RequestQuerystringDefault,
-    Headers = RequestHeadersDefault
+    Headers = FastifyHeadersWithIP
   >(path: string, handler: RouteHandlerMethod<
     RawServerBase,
     RawRequestDefaultExpression<RawServerBase>,
@@ -254,7 +254,7 @@ export class Plugin extends CPlugin<IWebServerConfig> {
     Body = any,
     Params = RequestParamsDefault,
     Querystring = RequestQuerystringDefault,
-    Headers = RequestHeadersDefault
+    Headers = FastifyHeadersWithIP
   >(path: string, handler: RouteHandlerMethod<
     RawServerBase,
     RawRequestDefaultExpression<RawServerBase>,
@@ -275,7 +275,7 @@ export class Plugin extends CPlugin<IWebServerConfig> {
     Body = any,
     Params = RequestParamsDefault,
     Querystring = RequestQuerystringDefault,
-    Headers = RequestHeadersDefault
+    Headers = FastifyHeadersWithIP
   >(path: string, handler: RouteHandlerMethod<
     RawServerBase,
     RawRequestDefaultExpression<RawServerBase>,
@@ -309,7 +309,7 @@ export class Plugin extends CPlugin<IWebServerConfig> {
     Body = any,
     Params = RequestParamsDefault,
     Querystring = RequestQuerystringDefault,
-    Headers = RequestHeadersDefault
+    Headers = FastifyHeadersWithIP
   >(path: string, handler: RouteHandlerMethod<
     RawServerBase,
     RawRequestDefaultExpression<RawServerBase>,
@@ -330,7 +330,7 @@ export class Plugin extends CPlugin<IWebServerConfig> {
     Body = any,
     Params = RequestParamsDefault,
     Querystring = RequestQuerystringDefault,
-    Headers = RequestHeadersDefault
+    Headers = FastifyHeadersWithIP
   >(path: string, handler: RouteHandlerMethod<
     RawServerBase,
     RawRequestDefaultExpression<RawServerBase>,
@@ -351,7 +351,7 @@ export class Plugin extends CPlugin<IWebServerConfig> {
     Body = any,
     Params = RequestParamsDefault,
     Querystring = RequestQuerystringDefault,
-    Headers = RequestHeadersDefault
+    Headers = FastifyHeadersWithIP
   >(path: string, handler: RouteHandlerMethod<
     RawServerBase,
     RawRequestDefaultExpression<RawServerBase>,
@@ -372,7 +372,7 @@ export class Plugin extends CPlugin<IWebServerConfig> {
     Body = any,
     Params = RequestParamsDefault,
     Querystring = RequestQuerystringDefault,
-    Headers = RequestHeadersDefault
+    Headers = FastifyHeadersWithIP
   >(path: string, handler: RouteHandlerMethod<
     RawServerBase,
     RawRequestDefaultExpression<RawServerBase>,
@@ -393,7 +393,7 @@ export class Plugin extends CPlugin<IWebServerConfig> {
     Body = any,
     Params = RequestParamsDefault,
     Querystring = RequestQuerystringDefault,
-    Headers = RequestHeadersDefault
+    Headers = FastifyHeadersWithIP
   >(path: string, handler: RouteHandlerMethod<
     RawServerBase,
     RawRequestDefaultExpression<RawServerBase>,
@@ -414,7 +414,7 @@ export class Plugin extends CPlugin<IWebServerConfig> {
     Body = any,
     Params = RequestParamsDefault,
     Querystring = RequestQuerystringDefault,
-    Headers = RequestHeadersDefault
+    Headers = FastifyHeadersWithIP
   >(path: string, handler: RouteHandlerMethod<
     RawServerBase,
     RawRequestDefaultExpression<RawServerBase>,
@@ -435,7 +435,7 @@ export class Plugin extends CPlugin<IWebServerConfig> {
     Body = any,
     Params = RequestParamsDefault,
     Querystring = RequestQuerystringDefault,
-    Headers = RequestHeadersDefault
+    Headers = FastifyHeadersWithIP
   >(path: string, handler: RouteHandlerMethod<
     RawServerBase,
     RawRequestDefaultExpression<RawServerBase>,
@@ -456,7 +456,7 @@ export class Plugin extends CPlugin<IWebServerConfig> {
     Body = any,
     Params = RequestParamsDefault,
     Querystring = RequestQuerystringDefault,
-    Headers = RequestHeadersDefault
+    Headers = FastifyHeadersWithIP
   >(path: string, handler: RouteHandlerMethod<
     RawServerBase,
     RawRequestDefaultExpression<RawServerBase>,
@@ -490,7 +490,7 @@ export class Plugin extends CPlugin<IWebServerConfig> {
     Body = any,
     Params = RequestParamsDefault,
     Querystring = RequestQuerystringDefault,
-    Headers = RequestHeadersDefault
+    Headers = FastifyHeadersWithIP
   >(path: string, handler: RouteHandlerMethod<
     RawServerBase,
     RawRequestDefaultExpression<RawServerBase>,
@@ -511,7 +511,7 @@ export class Plugin extends CPlugin<IWebServerConfig> {
     Body = any,
     Params = RequestParamsDefault,
     Querystring = RequestQuerystringDefault,
-    Headers = RequestHeadersDefault
+    Headers = FastifyHeadersWithIP
   >(path: string, handler: RouteHandlerMethod<
     RawServerBase,
     RawRequestDefaultExpression<RawServerBase>,
@@ -532,7 +532,7 @@ export class Plugin extends CPlugin<IWebServerConfig> {
     Body = any,
     Params = RequestParamsDefault,
     Querystring = RequestQuerystringDefault,
-    Headers = RequestHeadersDefault
+    Headers = FastifyHeadersWithIP
   >(path: string, handler: RouteHandlerMethod<
     RawServerBase,
     RawRequestDefaultExpression<RawServerBase>,
@@ -553,7 +553,7 @@ export class Plugin extends CPlugin<IWebServerConfig> {
     Body = any,
     Params = RequestParamsDefault,
     Querystring = RequestQuerystringDefault,
-    Headers = RequestHeadersDefault
+    Headers = FastifyHeadersWithIP
   >(path: string, handler: RouteHandlerMethod<
     RawServerBase,
     RawRequestDefaultExpression<RawServerBase>,
@@ -574,7 +574,7 @@ export class Plugin extends CPlugin<IWebServerConfig> {
     Body = any,
     Params = RequestParamsDefault,
     Querystring = RequestQuerystringDefault,
-    Headers = RequestHeadersDefault
+    Headers = FastifyHeadersWithIP
   >(path: string, handler: RouteHandlerMethod<
     RawServerBase,
     RawRequestDefaultExpression<RawServerBase>,
@@ -595,7 +595,7 @@ export class Plugin extends CPlugin<IWebServerConfig> {
     Body = any,
     Params = RequestParamsDefault,
     Querystring = RequestQuerystringDefault,
-    Headers = RequestHeadersDefault
+    Headers = FastifyHeadersWithIP
   >(path: string, handler: RouteHandlerMethod<
     RawServerBase,
     RawRequestDefaultExpression<RawServerBase>,
@@ -616,7 +616,7 @@ export class Plugin extends CPlugin<IWebServerConfig> {
     Body = any,
     Params = RequestParamsDefault,
     Querystring = RequestQuerystringDefault,
-    Headers = RequestHeadersDefault
+    Headers = FastifyHeadersWithIP
   >(path: string, handler: RouteHandlerMethod<
     RawServerBase,
     RawRequestDefaultExpression<RawServerBase>,
@@ -637,7 +637,7 @@ export class Plugin extends CPlugin<IWebServerConfig> {
     Body = any,
     Params = RequestParamsDefault,
     Querystring = RequestQuerystringDefault,
-    Headers = RequestHeadersDefault
+    Headers = FastifyHeadersWithIP
   >(path: string, handler: RouteHandlerMethod<
     RawServerBase,
     RawRequestDefaultExpression<RawServerBase>,

@@ -1,9 +1,14 @@
 import {
-  FastifyInstance, RequestGenericInterface, RequestHeadersDefault,
+  FastifyInstance, RequestHeadersDefault, RequestGenericInterface,
   RequestParamsDefault, RequestQuerystringDefault
 } from 'fastify';
 import { FastifyCorsOptions } from 'fastify-cors';
 import { RateLimitOptions } from 'fastify-rate-limit';
+import { IncomingHttpHeaders } from 'http';
+
+export interface FastifyHeadersWithIP extends IncomingHttpHeaders {
+  ip: string;
+}
 
 export enum IWebServerConfigServer {
   http = "http",
@@ -43,7 +48,7 @@ export interface FastifyRequestInterface<
   Body = any,
   Params = RequestParamsDefault,
   Querystring = RequestQuerystringDefault,
-  Headers = RequestHeadersDefault
+  Headers = FastifyHeadersWithIP
   > extends RequestGenericInterface {
   Body?: Body;
   Querystring?: Querystring;
