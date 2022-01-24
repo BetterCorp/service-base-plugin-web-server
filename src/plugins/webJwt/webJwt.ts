@@ -31,7 +31,7 @@ export class webJwtExpress extends CPluginClient<IEJWTPluginConfig> {
 
   async verifyQuiet(req: ExpressRequest, tokenType: EJWTTokenType = EJWTTokenType.req): Promise<any> {
     const self = this;
-    return new Promise(async (resolve, reject) => {
+    return new Promise(async (resolve) => {
       let foundToken: string | null = null;
       if (tokenType === EJWTTokenType.req || tokenType === EJWTTokenType.reqOrQuery) {
         if (`${ req.headers.authorization }`.indexOf(`${ (await self.getPluginConfig()).bearerStr } `) === 0) {
@@ -59,7 +59,7 @@ export class webJwtExpress extends CPluginClient<IEJWTPluginConfig> {
         return resolve(false);
       }
 
-      (await self.getJWTLib()).validateToken(foundToken!, (await self.getPluginConfig()).clientCanResolveLocally).then(resolve).catch(() => reject(false));
+      (await self.getJWTLib()).validateToken(foundToken!, (await self.getPluginConfig()).clientCanResolveLocally).then(resolve).catch(() => resolve(false));
     });
   }
 }
@@ -117,7 +117,7 @@ export class webJwtFastify extends CPluginClient<IEJWTPluginConfig> {
         return resolve(false);
       }
 
-      (await self.getJWTLib()).validateToken(foundToken!, (await self.getPluginConfig()).clientCanResolveLocally).then(resolve).catch(() => reject(false));
+      (await self.getJWTLib()).validateToken(foundToken!, (await self.getPluginConfig()).clientCanResolveLocally).then(resolve).catch(() => resolve(false));
     });
   }
 }
@@ -145,7 +145,12 @@ export class webJwt extends CPluginClient<IEJWTPluginConfig> {
 
   async validateToken(token: string): Promise<any> {
     const self = this;
-    return new Promise(async (resolve, reject) => (await self.getJWTLib()).validateToken(token, (await self.getPluginConfig()).clientCanResolveLocally).then(resolve).catch(() => reject(false)));
+    return new Promise(async (resolve, reject) => (await self.getJWTLib()).validateToken(token, (await self.getPluginConfig()).clientCanResolveLocally).then(resolve).catch((e) => reject(e)));
+  }
+
+  async validateTokenQuiet(token: string): Promise<any> {
+    const self = this;
+    return new Promise(async (resolve) => (await self.getJWTLib()).validateToken(token, (await self.getPluginConfig()).clientCanResolveLocally).then(resolve).catch(() => resolve(false)));
   }
 
   async signTokenSecretKey(tokenData: any, userId: string) {
