@@ -9,8 +9,8 @@ import {
   RouteHandlerMethod
 } from 'fastify';
 import fastifyBsbLogger from './logger';
-import fastifyCors from 'fastify-cors';
-import fastifyRateLimit from 'fastify-rate-limit';
+import fastifyCors from '@fastify/cors';
+import fastifyRateLimit from '@fastify/rate-limit';
 import fastifyIP from './ipHandlerPlugin';
 import { hostname } from 'os';
 import { Server as HServer } from 'http';

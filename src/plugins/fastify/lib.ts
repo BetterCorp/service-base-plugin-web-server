@@ -2,8 +2,8 @@ import {
   FastifyInstance, RequestGenericInterface,
   RequestParamsDefault, RequestQuerystringDefault
 } from 'fastify';
-import { FastifyCorsOptions } from 'fastify-cors';
-import { RateLimitOptions } from 'fastify-rate-limit';
+import { FastifyCorsOptions } from '@fastify/cors';
+import { RateLimitOptions } from '@fastify/rate-limit';
 import { IncomingHttpHeaders } from 'http';
 
 export interface FastifyHeadersWithIP extends IncomingHttpHeaders {
