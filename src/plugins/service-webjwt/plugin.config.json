@@ -1,0 +1,39 @@
+{
+  "key": "service-web-server",
+  "name": "WebJWT",
+  "icon": "web-jwt.png",
+  "description": "WebJWT NodeJS plugin",
+  "badges": [
+    {
+      "url": "https://codecov.io/gh/BetterCorp/service-base-service-web-server",
+      "img": "https://codecov.io/gh/BetterCorp/service-base-service-web-server/branch/master/graph/badge.svg"
+    },
+    {
+      "img": "https://img.shields.io/github/license/BetterCorp/service-base-service-web-server"
+    },
+    {
+      "img": "https://img.shields.io/snyk/vulnerabilities/github/BetterCorp/service-base-service-web-server"
+    },
+    {
+      "img": "https://img.shields.io/github/issues-raw/BetterCorp/service-base-service-web-server"
+    },
+    {
+      "img": "https://github.com/BetterCorp/service-base-service-web-server/actions/workflows/develop.yml/badge.svg?branch=develop"
+    },
+    {
+      "img": "https://github.com/BetterCorp/service-base-service-web-server/actions/workflows/master.yml/badge.svg?branch=master"
+    },
+    {
+      "img": "https://img.shields.io/github/issues-raw/BetterCorp/service-base-service-web-server"
+    },
+    {
+      "img": "https://img.shields.io/npm/dt/@bettercorp/service-base-service-web-server"
+    },
+    {
+      "img": "https://img.shields.io/bundlephobia/min/@bettercorp/service-base-service-web-server"
+    },
+    {
+      "img": "https://img.shields.io/npm/v/@bettercorp/service-base-service-web-server"
+    }
+  ]
+}
