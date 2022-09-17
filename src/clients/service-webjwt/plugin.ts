@@ -1,27 +1,53 @@
-import { CPluginClient, IPlugin } from '@bettercorp/service-base/lib/interfaces/plugins';
-import { Tools } from '@bettercorp/tools/lib/Tools';
-import { EJWTTokenType } from './plugin';
-import { IEJWTPluginConfig } from './sec.config';
-import { Request as ExpressRequest, Response as ExpressResponse } from 'express';
-import { FastifyReply, FastifyRequest } from 'fastify';
-import { JWTLib } from './lib';
+import { Tools } from "@bettercorp/tools/lib/Tools";
+import {
+  Request as ExpressRequest,
+  Response as ExpressResponse,
+} from "express";
+import { FastifyReply, FastifyRequest } from "fastify";
+import { ServiceCallable, ServicesClient } from "@bettercorp/service-base";
+import {
+  EJWTTokenType,
+  EmitAndReturnableEvents,
+} from "../../plugins/service-webjwt/plugin";
+import { IEJWTPluginConfig } from "../../plugins/service-webjwt/sec.config";
 
-export class webJwtExpress extends CPluginClient<IEJWTPluginConfig> {
-  public readonly _pluginName: string = "webJwt";
-  private JWTLib!: JWTLib;
-  private async getJWTLib() {
-    if (Tools.isNullOrUndefined(this.JWTLib))
-      this.JWTLib = await (new JWTLib()).init(this);
+export class webJwtExpress extends ServicesClient<
+  ServiceCallable,
+  ServiceCallable,
+  EmitAndReturnableEvents,
+  ServiceCallable,
+  ServiceCallable,
+  IEJWTPluginConfig
+> {
+  public override readonly _pluginName: string = "service-webjwt";
+  public override readonly initAfterPlugins: string[] = [
+    "service-fastify",
+    "service-webjwt",
+  ];
+  public override readonly runBeforePlugins: string[] = ["service-fastify"];
 
-    return this.JWTLib;
+  private config!: {
+    bearerStr: string;
+    queryKey: string;
+    defaultTokenType: EJWTTokenType;
+    allowedTokenTypes: Array<EJWTTokenType>;
+  };
+
+  public async init() {
+    this.config = await this._plugin.emitEventAndReturn("getConfig");
   }
 
-  async verify(req: ExpressRequest, res: ExpressResponse, tokenType: EJWTTokenType = EJWTTokenType.req): Promise<any> {
+  async verify(
+    req: ExpressRequest,
+    res: ExpressResponse,
+    tokenType: EJWTTokenType = EJWTTokenType.req
+  ): Promise<any> {
+    if (this.config === undefined) throw "INIT FIRST!";
     const self = this;
     return new Promise((resolve, reject) => {
-      self.verifyQuiet(req, tokenType).then(x => {
+      self.verifyQuiet(req, tokenType).then((x) => {
         if (x === false) {
-          res.status(403).send('Forbidden');
+          res.status(403).send("Forbidden");
           return reject();
         }
         resolve(x);
@@ -29,132 +55,239 @@ export class webJwtExpress extends CPluginClient<IEJWTPluginConfig> {
     });
   }
 
-  async verifyQuiet(req: ExpressRequest, tokenType: EJWTTokenType = EJWTTokenType.req): Promise<any> {
-    const self = this;
-    return new Promise(async (resolve) => {
-      let foundToken: string | null = null;
-      if (tokenType === EJWTTokenType.req || tokenType === EJWTTokenType.reqOrQuery) {
-        if (`${ req.headers.authorization }`.indexOf(`${ (await self.getPluginConfig()).bearerStr } `) === 0) {
-          foundToken = `${ req.headers.authorization }`.split(' ')[1];
-        } else {
-          self.refPlugin.log.warn('*authorization: no header');
-          self.refPlugin.log.debug(req.headers);
-          self.refPlugin.log.debug(req.headers.authorization);
-          self.refPlugin.log.debug((await self.getPluginConfig()).bearerStr);
-        }
-      }
-      if (foundToken === null && (tokenType === EJWTTokenType.query || tokenType === EJWTTokenType.reqOrQuery)) {
-        if (Tools.isNullOrUndefined(req.query) || Tools.isNullOrUndefined(req.query[(await self.getPluginConfig()).queryKey])) {
-          self.refPlugin.log.warn('*authorization: failed no query passtk');
-          self.refPlugin.log.debug(req.query);
-          self.refPlugin.log.debug((await self.getPluginConfig()).queryKey);
-        } else {
-          foundToken = decodeURIComponent(`${ req.query[(await self.getPluginConfig()).queryKey] }`);
-        }
-      }
-
-      if (Tools.isNullOrUndefined(foundToken) || foundToken == "") {
-        self.refPlugin.log.warn('*authorization: failed no token');
-        self.refPlugin.log.debug(foundToken);
-        return resolve(false);
-      }
-
-      (await self.getJWTLib()).validateToken(foundToken!, (await self.getPluginConfig()).clientCanResolveLocally).then(resolve).catch(() => resolve(false));
-    });
-  }
-}
-
-export class webJwtFastify extends CPluginClient<IEJWTPluginConfig> {
-  public readonly _pluginName: string = "webJwt";
-  private JWTLib!: JWTLib;
-  private async getJWTLib() {
-    if (Tools.isNullOrUndefined(this.JWTLib))
-      this.JWTLib = await (new JWTLib()).init(this);
-
-    return this.JWTLib;
-  }
-
-  async verify(req: FastifyRequest<any>, reply: FastifyReply, tokenType: EJWTTokenType = EJWTTokenType.req): Promise<any> {
-    const self = this;
-    return new Promise((resolve, reject) => {
-      self.verifyQuiet(req, tokenType).then(x => {
-        if (x === false) {
-          reply.code(403).send('Forbidden');
-          return reject();
-        }
-        resolve(x);
-      });
-    });
-  }
-
-  async verifyQuiet(req: FastifyRequest<any>, tokenType: EJWTTokenType = EJWTTokenType.req): Promise<any> {
+  async verifyQuiet(
+    req: ExpressRequest,
+    tokenType?: EJWTTokenType
+  ): Promise<any> {
+    if (this.config === undefined) throw "INIT FIRST!";
     const self = this;
     return new Promise(async (resolve, reject) => {
+      if (tokenType !== undefined) {
+        if (self.config.allowedTokenTypes.indexOf(tokenType) < 0)
+          return reject("NOT ALLOWED TOKEN TYPE!" + tokenType);
+      } else tokenType = self.config.defaultTokenType;
+
       let foundToken: string | null = null;
-      if (tokenType === EJWTTokenType.req || tokenType === EJWTTokenType.reqOrQuery) {
-        if (`${ req.headers.authorization }`.indexOf(`${ (await self.getPluginConfig()).bearerStr } `) === 0) {
-          foundToken = `${ req.headers.authorization }`.split(' ')[1];
+      if (
+        tokenType === EJWTTokenType.req ||
+        tokenType === EJWTTokenType.reqOrQuery
+      ) {
+        if (
+          `${req.headers.authorization}`.indexOf(
+            `${self.config.bearerStr} `
+          ) === 0
+        ) {
+          foundToken = `${req.headers.authorization}`.split(" ")[1];
         } else {
-          self.refPlugin.log.warn('*authorization: no header');
-          self.refPlugin.log.debug(req.headers);
-          self.refPlugin.log.debug(req.headers.authorization);
-          self.refPlugin.log.debug((await self.getPluginConfig()).bearerStr);
+          self._plugin.log.warn("*authorization: no header {bearerStr}", {
+            bearerStr: self.config.bearerStr,
+          });
+          self._plugin.log.debug(
+            "Headers: {headers}",
+            {
+              headers: Object.keys(req.headers).map(
+                (x) => `(${x}=${req.headers[x]})`
+              ),
+            },
+            true
+          );
         }
       }
-      if (foundToken === null && (tokenType === EJWTTokenType.query || tokenType === EJWTTokenType.reqOrQuery)) {
-        if (Tools.isNullOrUndefined(req.query) || Tools.isNullOrUndefined(req.query[(await self.getPluginConfig()).queryKey])) {
-          self.refPlugin.log.warn('*authorization: failed no query passtk');
-          self.refPlugin.log.debug(req.query);
-          self.refPlugin.log.debug((await self.getPluginConfig()).queryKey);
+      if (
+        foundToken === null &&
+        (tokenType === EJWTTokenType.query ||
+          tokenType === EJWTTokenType.reqOrQuery)
+      ) {
+        if (
+          Tools.isNullOrUndefined(req.query) ||
+          Tools.isNullOrUndefined(req.query[self.config.queryKey])
+        ) {
+          self._plugin.log.warn("*authorization: failed no query {queryKey}", {
+            queryKey: self.config.queryKey,
+          });
+          self._plugin.log.debug(
+            "Query: {query}",
+            {
+              query: Object.keys(req.query).map(
+                (x) => `(${x}=${req.query[x]})`
+              ),
+            },
+            true
+          );
         } else {
-          foundToken = decodeURIComponent(`${ req.query[(await self.getPluginConfig()).queryKey] }`);
+          foundToken = decodeURIComponent(`${req.query[self.config.queryKey]}`);
         }
       }
 
       if (Tools.isNullOrUndefined(foundToken) || foundToken == "") {
-        self.refPlugin.log.warn('*authorization: failed no token');
-        self.refPlugin.log.debug(foundToken);
+        self._plugin.log.warn("*authorization: failed no token");
         return resolve(false);
       }
 
-      (await self.getJWTLib()).validateToken(foundToken!, (await self.getPluginConfig()).clientCanResolveLocally).then(resolve).catch(() => resolve(false));
+      self._plugin
+        .emitEventAndReturnTimed("validateToken", 1000, foundToken!)
+        .then(resolve)
+        .catch(() => resolve(false));
     });
   }
 }
 
-export class webJwt extends CPluginClient<IEJWTPluginConfig> {
-  public readonly _pluginName: string = "webJwt";
-  public express: webJwtExpress;
-  public fastify: webJwtFastify;
-  private JWTLib!: JWTLib;
-  private async getJWTLib() {
-    if (Tools.isNullOrUndefined(this.JWTLib))
-      this.JWTLib = await (new JWTLib()).init(this);
+export class webJwtFastify extends ServicesClient<
+  ServiceCallable,
+  ServiceCallable,
+  EmitAndReturnableEvents,
+  ServiceCallable,
+  ServiceCallable,
+  IEJWTPluginConfig
+> {
+  public override readonly _pluginName: string = "service-webjwt";
+  public override readonly initAfterPlugins: string[] = [
+    "service-fastify",
+    "service-webjwt",
+  ];
+  public override readonly runBeforePlugins: string[] = ["service-fastify"];
 
-    return this.JWTLib;
+  private config!: {
+    bearerStr: string;
+    queryKey: string;
+    defaultTokenType: EJWTTokenType;
+    allowedTokenTypes: Array<EJWTTokenType>;
+  };
+
+  public async init() {
+    this.config = await this._plugin.emitEventAndReturn("getConfig");
   }
 
-  constructor(self: IPlugin) {
-    super(self);
-    this.express = new webJwtExpress(self);
-    this.fastify = new webJwtFastify(self);
-    this.pluginName().then(async pluginName => {
-      this.refPlugin.log.debug(`Running mapped as ${ this._pluginName }: ${ pluginName } / appConfigDirectly: ${ await this.refPlugin.appConfig.getMappedPluginName(this._pluginName) }`);
-    }).catch(this.refPlugin.log.warn);
+  async verify(
+    req: FastifyRequest<any>,
+    reply: FastifyReply,
+    tokenType: EJWTTokenType = EJWTTokenType.req
+  ): Promise<any> {
+    if (this.config === undefined) throw "INIT FIRST!";
+    const self = this;
+    return new Promise((resolve, reject) => {
+      self.verifyQuiet(req, tokenType).then((x) => {
+        if (x === false) {
+          reply.code(403).send("Forbidden");
+          return reject();
+        }
+        resolve(x);
+      });
+    });
   }
+
+  async verifyQuiet(
+    req: FastifyRequest<any, any, any, any, any, any, any, any>,
+    tokenType?: EJWTTokenType
+  ): Promise<any> {
+    if (this.config === undefined) throw "INIT FIRST!";
+    const self = this;
+    return new Promise(async (resolve, reject) => {
+      if (tokenType !== undefined) {
+        if (self.config.allowedTokenTypes.indexOf(tokenType) < 0)
+          return reject("NOT ALLOWED TOKEN TYPE!" + tokenType);
+      } else tokenType = self.config.defaultTokenType;
+
+      let foundToken: string | null = null;
+      if (
+        tokenType === EJWTTokenType.req ||
+        tokenType === EJWTTokenType.reqOrQuery
+      ) {
+        if (
+          `${req.headers.authorization}`.indexOf(
+            `${self.config.bearerStr} `
+          ) === 0
+        ) {
+          foundToken = `${req.headers.authorization}`.split(" ")[1];
+        } else {
+          self._plugin.log.warn("*authorization: no header {bearerStr}", {
+            bearerStr: self.config.bearerStr,
+          });
+          self._plugin.log.debug(
+            "Headers: {headers}",
+            {
+              headers: Object.keys(req.headers).map(
+                (x) => `(${x}=${req.headers[x]})`
+              ),
+            },
+            true
+          );
+        }
+      }
+      if (
+        foundToken === null &&
+        (tokenType === EJWTTokenType.query ||
+          tokenType === EJWTTokenType.reqOrQuery)
+      ) {
+        if (
+          Tools.isNullOrUndefined(req.query) ||
+          Tools.isNullOrUndefined(req.query[self.config.queryKey])
+        ) {
+          self._plugin.log.warn("*authorization: failed no query {queryKey}", {
+            queryKey: self.config.queryKey,
+          });
+          self._plugin.log.debug(
+            "Query: {query}",
+            {
+              query: Object.keys(req.query).map(
+                (x) => `(${x}=${req.query[x]})`
+              ),
+            },
+            true
+          );
+        } else {
+          foundToken = decodeURIComponent(`${req.query[self.config.queryKey]}`);
+        }
+      }
+
+      if (Tools.isNullOrUndefined(foundToken) || foundToken == "") {
+        self._plugin.log.warn("*authorization: failed no token");
+        return resolve(false);
+      }
+
+      self._plugin
+        .emitEventAndReturnTimed("validateToken", 1000, foundToken!)
+        .then(resolve)
+        .catch(() => resolve(false));
+    });
+  }
+}
+
+export class webJwt extends ServicesClient<
+  ServiceCallable,
+  ServiceCallable,
+  EmitAndReturnableEvents,
+  ServiceCallable,
+  ServiceCallable,
+  IEJWTPluginConfig
+> {
+  public override readonly _pluginName: string = "service-webjwt";
+  public override readonly initAfterPlugins: string[] = ["service-webjwt"];
 
   async validateToken(token: string): Promise<any> {
-    const self = this;
-    return new Promise(async (resolve, reject) => (await self.getJWTLib()).validateToken(token, (await self.getPluginConfig()).clientCanResolveLocally).then(resolve).catch((e) => reject(e)));
+    return await this._plugin.emitEventAndReturnTimed(
+      "validateToken",
+      1000,
+      token
+    );
   }
 
   async validateTokenQuiet(token: string): Promise<any> {
     const self = this;
-    return new Promise(async (resolve) => (await self.getJWTLib()).validateToken(token, (await self.getPluginConfig()).clientCanResolveLocally).then(resolve).catch(() => resolve(false)));
+    return new Promise(async (resolve) =>
+      self._plugin
+        .emitEventAndReturnTimed("validateToken", 1000, token)
+        .then(resolve)
+        .catch(() => resolve(false))
+    );
   }
 
-  async signTokenSecretKey(tokenData: any, userId: string) {
-    const self = this;
-    return new Promise(async (resolve, reject) => (await self.getJWTLib()).signTokenSecretKey(tokenData, userId).then(resolve).catch(reject));
+  async signToken(tokenData: any, userId: string) {
+    return await this._plugin.emitEventAndReturnTimed(
+      "signToken",
+      1000,
+      tokenData,
+      userId
+    );
   }
 }

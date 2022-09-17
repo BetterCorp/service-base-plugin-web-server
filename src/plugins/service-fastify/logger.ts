@@ -1,22 +1,19 @@
-import { CPlugin } from '@bettercorp/service-base/lib/interfaces/plugins';
+
+import { IPluginLogger } from '@bettercorp/service-base';
 import { FastifyInstance } from 'fastify';
 import fp from 'fastify-plugin';
 
-interface bsbOpts {
-  uSelf: CPlugin;
-}
-
-function plugin(fastify: FastifyInstance, opts: bsbOpts, next: Function) {
+function plugin(fastify: FastifyInstance, opts: IPluginLogger, next: Function) {
   function info() {
-    opts.uSelf.log.info(arguments);
+    opts.info(arguments.toString(), {}, true);
   }
 
   function warn() {
-    opts.uSelf.log.warn(arguments);
+    opts.warn(arguments.toString(), {}, true);
   }
 
   function error() {
-    opts.uSelf.log.error(arguments);
+    opts.error(arguments.toString(), {}, true);
   }
 
   const logger = {

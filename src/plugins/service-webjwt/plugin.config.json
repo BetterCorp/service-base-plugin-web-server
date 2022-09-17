@@ -1,5 +1,5 @@
 {
-  "key": "service-web-server",
+  "key": "service-webjwt",
   "name": "WebJWT",
   "icon": "web-jwt.png",
   "description": "WebJWT NodeJS plugin",
