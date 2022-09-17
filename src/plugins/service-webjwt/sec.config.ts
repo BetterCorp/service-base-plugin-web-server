@@ -1,6 +1,11 @@
 import * as bcrypt from "bcrypt";
 import { SecConfig } from "@bettercorp/service-base";
-import { EJWTTokenType } from "./plugin";
+
+export enum EJWTTokenType {
+  req = "req",
+  reqOrQuery = "reqOrQuery",
+  query = "query",
+}
 
 export enum IEJWTPluginAuthType {
   JWTCERTS = "JWTCERTS",

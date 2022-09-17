@@ -5,11 +5,11 @@ import {
 } from "express";
 import { FastifyReply, FastifyRequest } from "fastify";
 import { ServiceCallable, ServicesClient } from "@bettercorp/service-base";
+import { EmitAndReturnableEvents } from "../../plugins/service-webjwt/plugin";
 import {
   EJWTTokenType,
-  EmitAndReturnableEvents,
-} from "../../plugins/service-webjwt/plugin";
-import { IEJWTPluginConfig } from "../../plugins/service-webjwt/sec.config";
+  IEJWTPluginConfig,
+} from "../../plugins/service-webjwt/sec.config";
 
 export class webJwtExpress extends ServicesClient<
   ServiceCallable,

@@ -1,15 +1,9 @@
-import { IEJWTPluginAuthType, IEJWTPluginConfig } from "./sec.config";
+import { EJWTTokenType, IEJWTPluginAuthType, IEJWTPluginConfig } from "./sec.config";
 import * as jsonwebtoken from "jsonwebtoken";
 import jwksClient from "jwks-rsa";
 import * as bcrypt from "bcrypt";
 import { ServiceCallable, ServicesBase } from "@bettercorp/service-base";
 import { Tools } from "@bettercorp/tools/lib/Tools";
-
-export enum EJWTTokenType {
-  req = "req",
-  reqOrQuery = "reqOrQuery",
-  query = "query",
-}
 
 export interface EmitAndReturnableEvents {
   validateToken(token: string): Promise<any>;
