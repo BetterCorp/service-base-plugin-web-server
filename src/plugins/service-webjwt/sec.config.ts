@@ -1,17 +1,45 @@
-import { VerifyOptions } from "jsonwebtoken";
-import { Request, Response } from "express";
 import * as bcrypt from "bcrypt";
 import { SecConfig } from "@bettercorp/service-base";
 import { EJWTTokenType } from "./plugin";
 
-export interface IExpressJWTInit {
-  req: Request;
-  res: Response;
-  next: Function;
-}
 export enum IEJWTPluginAuthType {
   JWTCERTS = "JWTCERTS",
   JWTSECRET = "JWTSECRET",
+}
+// https://github.com/auth0/node-jsonwebtoken#algorithms-supported
+export type Algorithm =
+  | "HS256"
+  | "HS384"
+  | "HS512"
+  | "RS256"
+  | "RS384"
+  | "RS512"
+  | "ES256"
+  | "ES384"
+  | "ES512"
+  | "PS256"
+  | "PS384"
+  | "PS512"
+  | "none";
+
+export interface VerifyOptions {
+  algorithms?: Algorithm[] | undefined;
+  audience?: string | RegExp | Array<string | RegExp> | undefined;
+  clockTimestamp?: number | undefined;
+  clockTolerance?: number | undefined;
+  /** return an object with the decoded `{ payload, header, signature }` instead of only the usual content of the payload. */
+  complete?: boolean | undefined;
+  issuer?: string | string[] | undefined;
+  ignoreExpiration?: boolean | undefined;
+  ignoreNotBefore?: boolean | undefined;
+  jwtid?: string | undefined;
+  /**
+   * If you want to check `nonce` claim, provide a string value here.
+   * It is used on Open ID for the ID Tokens. ([Open ID implementation notes](https://openid.net/specs/openid-connect-core-1_0.html#NonceNotes))
+   */
+  nonce?: string | undefined;
+  subject?: string | undefined;
+  maxAge?: string | number | undefined;
 }
 export interface IEJWTPluginConfig {
   keyUrl: string; // Key URL: JWT Signing key url
