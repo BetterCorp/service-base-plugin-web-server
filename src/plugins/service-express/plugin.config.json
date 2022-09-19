@@ -1,6 +1,6 @@
 {
   "key": "service-express",
-  "name": "ExpressJS Web Server",
+  "name": "Express Web Server",
   "icon": "express-js.png",
   "description": "ExpressJS NodeJS web server",
   "badges": [
