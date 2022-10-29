@@ -4,12 +4,21 @@ import {
   Response as ExpressResponse,
 } from "express";
 import { FastifyReply, FastifyRequest } from "fastify";
-import { ServiceCallable, ServicesClient } from "@bettercorp/service-base";
+import type { ServiceCallable, ServicesBase } from "@bettercorp/service-base";
+import { ServicesClient } from "@bettercorp/service-base";
 import { EmitAndReturnableEvents } from "../../plugins/service-webjwt/plugin";
 import {
   EJWTTokenType,
   IEJWTPluginConfig,
+  VerifyOptions,
 } from "../../plugins/service-webjwt/sec.config";
+import {
+  JwtHeader,
+  JwtPayload,
+  SigningKeyCallback,
+  verify,
+} from "jsonwebtoken";
+import { JwksClient, Options } from 'jwks-rsa';
 
 export class webJwtExpress extends ServicesClient<
   ServiceCallable,
@@ -21,10 +30,10 @@ export class webJwtExpress extends ServicesClient<
 > {
   public override readonly _pluginName: string = "service-webjwt";
   public override readonly initAfterPlugins: string[] = [
-    "service-fastify",
+    "service-express",
     "service-webjwt",
   ];
-  public override readonly runBeforePlugins: string[] = ["service-fastify"];
+  public override readonly runBeforePlugins: string[] = ["service-express"];
 
   private config!: {
     bearerStr: string;
@@ -289,5 +298,152 @@ export class webJwt extends ServicesClient<
       tokenData,
       userId
     );
+  }
+}
+
+export class webJwtLocal extends ServicesClient<
+  ServiceCallable,
+  ServiceCallable,
+  ServiceCallable,
+  ServiceCallable,
+  ServiceCallable,
+  IEJWTPluginConfig
+> {
+  public override readonly _pluginName: string = "service-webjwt";
+  private RequestConfig: {
+    bearerStr: string;
+    queryKey: string;
+    defaultTokenType: EJWTTokenType;
+    allowedTokenTypes: Array<EJWTTokenType>;
+  };
+  private JWTClient: JwksClient;
+  private TokenConfig: VerifyOptions;
+  constructor(
+    self: ServicesBase,
+    config: {
+      bearerStr: string;
+      queryKey: string;
+      defaultTokenType: EJWTTokenType;
+      allowedTokenTypes: Array<EJWTTokenType>;
+    },
+    jwtConfig: Options,
+    tokenConfig: VerifyOptions
+  ) {
+    super(self);
+    this.RequestConfig = config;
+    this.TokenConfig = tokenConfig;
+    this.JWTClient = new JwksClient(jwtConfig);
+  }
+
+  private getJWTKey(header: JwtHeader, callback: SigningKeyCallback): void {
+    this.JWTClient.getSigningKey(header.kid, (err: any, key: any) => {
+      try {
+        var signingKey = key.publicKey || key.rsaPublicKey;
+        callback(null, signingKey);
+      } catch (exc: any) {
+        callback(exc);
+      }
+    });
+  }
+
+  public async verifyWebRequest<Token extends JwtPayload = any>(
+    req:
+      | FastifyRequest<any, any, any, any, any, any, any, any>
+      | ExpressRequest,
+    tokenType?: EJWTTokenType
+  ): Promise<Token | boolean | null> {
+    const self = this;
+    return new Promise(async (resolve) => {
+      if (tokenType !== undefined) {
+        if (self.RequestConfig.allowedTokenTypes.indexOf(tokenType) < 0)
+          return resolve(null);
+      } else tokenType = self.RequestConfig.defaultTokenType;
+
+      let foundToken: string | null = null;
+      if (
+        tokenType === EJWTTokenType.req ||
+        tokenType === EJWTTokenType.reqOrQuery
+      ) {
+        if (
+          `${req.headers.authorization}`.indexOf(
+            `${self.RequestConfig.bearerStr} `
+          ) === 0
+        ) {
+          foundToken = `${req.headers.authorization}`.split(" ")[1];
+        } else {
+          self._plugin.log.warn("*authorization: no header {bearerStr}", {
+            bearerStr: self.RequestConfig.bearerStr,
+          });
+          self._plugin.log.debug(
+            "Headers: {headers}",
+            {
+              headers: Object.keys(req.headers).map(
+                (x) => `(${x}=${req.headers[x]})`
+              ),
+            },
+            true
+          );
+        }
+      }
+      if (
+        foundToken === null &&
+        (tokenType === EJWTTokenType.query ||
+          tokenType === EJWTTokenType.reqOrQuery)
+      ) {
+        if (
+          Tools.isNullOrUndefined(req.query) ||
+          Tools.isNullOrUndefined(req.query[self.RequestConfig.queryKey])
+        ) {
+          self._plugin.log.warn("*authorization: failed no query {queryKey}", {
+            queryKey: self.RequestConfig.queryKey,
+          });
+          self._plugin.log.debug(
+            "Query: {query}",
+            {
+              query: Object.keys(req.query).map(
+                (x) => `(${x}=${req.query[x]})`
+              ),
+            },
+            true
+          );
+        } else {
+          foundToken = decodeURIComponent(
+            `${req.query[self.RequestConfig.queryKey]}`
+          );
+        }
+      }
+
+      if (Tools.isNullOrUndefined(foundToken) || foundToken == "") {
+        self._plugin.log.warn("*authorization: failed no token");
+        return resolve(null);
+      }
+
+      self.verifyToken<Token>(foundToken).then((x) => resolve(x));
+    });
+  }
+
+  public async verifyToken<Token extends JwtPayload = any>(
+    token?: string | null
+  ): Promise<boolean | Token> {
+    const self = this;
+    return new Promise((resolve) => {
+      if (token === undefined) return resolve(false);
+      if (token === null) return resolve(false);
+      verify(
+        token,
+        self.getJWTKey,
+        self.TokenConfig,
+        (error, decoded) => {
+          if (error !== null) return resolve(false);
+          if (typeof decoded === "string") return resolve(false);
+          if (decoded === undefined) return resolve(false);
+          if (decoded.header !== undefined) return resolve(false);
+          if ((decoded as Token).iss === undefined) return resolve(false);
+          if (self.TokenConfig.issuer !== (decoded as Token).iss)
+            return resolve(false);
+          resolve(decoded as Token);
+        }
+      );
+    });
   }
 }

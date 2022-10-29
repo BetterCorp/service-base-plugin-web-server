@@ -4,4 +4,5 @@ export {
   webJwtExpress,
   webJwtFastify,
   webJwt,
+  webJwtLocal,
 } from "./clients/service-webjwt/plugin";
