@@ -1,20 +1,20 @@
 import { SecConfig } from "@bettercorp/service-base";
 
 export interface FastifyCorsOptions {
-   origin?: boolean | string | Array<string>; // Origin: Configures the Access-Control-Allow-Origin CORS header.
-   credentials?: boolean; // Allow credentials header: Configures the Access-Control-Allow-Credentials CORS header.
-   exposedHeaders?: string | string[]; // Expose Headers: Configures the Access-Control-Expose-Headers CORS header.
-   allowedHeaders?: string | string[]; // Allow Headers: Configures the Access-Control-Allow-Headers CORS header.
-   methods?: string | string[]; // Allow Methods: Configures the Access-Control-Allow-Methods CORS header.
-   maxAge?: number; // Max Age: Configures the Access-Control-Max-Age CORS header.
-   preflightContinue?: boolean; // Preflight continue response: Pass the CORS preflight response to the route handler (default: false).
-   optionsSuccessStatus?: number; // Options Successs Status: Provides a status code to use for successful OPTIONS requests, since some legacy browsers (IE11, various SmartTVs) choke on 204.
-   preflight?: boolean; // Preflight: Pass the CORS preflight response to the route handler (default: false).
-   strictPreflight?: boolean; // Strict: Enforces strict requirement of the CORS preflight request headers (Access-Control-Request-Method and Origin).
-   /**
-    * Hide options route from the documentation built using fastify-swagger (default: true).
-    */
-   //hideOptionsRoute?: boolean;
+  origin?: boolean | string | Array<string>; // Origin: Configures the Access-Control-Allow-Origin CORS header.
+  credentials?: boolean; // Allow credentials header: Configures the Access-Control-Allow-Credentials CORS header.
+  exposedHeaders?: string | string[]; // Expose Headers: Configures the Access-Control-Expose-Headers CORS header.
+  allowedHeaders?: string | string[]; // Allow Headers: Configures the Access-Control-Allow-Headers CORS header.
+  methods?: string | string[]; // Allow Methods: Configures the Access-Control-Allow-Methods CORS header.
+  maxAge?: number; // Max Age: Configures the Access-Control-Max-Age CORS header.
+  preflightContinue?: boolean; // Preflight continue response: Pass the CORS preflight response to the route handler (default: false).
+  optionsSuccessStatus?: number; // Options Successs Status: Provides a status code to use for successful OPTIONS requests, since some legacy browsers (IE11, various SmartTVs) choke on 204.
+  preflight?: boolean; // Preflight: Pass the CORS preflight response to the route handler (default: false).
+  strictPreflight?: boolean; // Strict: Enforces strict requirement of the CORS preflight request headers (Access-Control-Request-Method and Origin).
+  /**
+   * Hide options route from the documentation built using fastify-swagger (default: true).
+   */
+  //hideOptionsRoute?: boolean;
 }
 export interface RateLimitOptions {
   max?: number; // Max Requests: The maximum number of requests a single client can perform inside a timeWindow
@@ -41,6 +41,7 @@ export interface FastifyRateLimit {
 }
 export interface FastifyWebServerConfig {
   health: boolean; // Enable /health endpoint: Used to monitoring
+  usingCloudflareWarpTraefikPlugin: boolean; // CloudflareWARP Traefik plugin: github.com/BetterCorp/cloudflarewarp is in front of this service
   cors: FastifyCors;
   rateLimit: FastifyRateLimit;
   ipRewrite: boolean; // Rewrite the IP: For Cloudflare and proxies
@@ -59,11 +60,17 @@ export class Config extends SecConfig<FastifyWebServerConfig> {
     existingConfig: FastifyWebServerConfig
   ): FastifyWebServerConfig {
     return {
-      health: existingConfig.health !== undefined ? existingConfig.health : false,
+      health:
+        existingConfig.health !== undefined ? existingConfig.health : false,
+      usingCloudflareWarpTraefikPlugin:
+        existingConfig.usingCloudflareWarpTraefikPlugin !== undefined
+          ? existingConfig.usingCloudflareWarpTraefikPlugin
+          : false,
       host: existingConfig.host !== undefined ? existingConfig.host : "0.0.0.0",
       httpPort:
         existingConfig.httpPort !== undefined ? existingConfig.httpPort : 80,
       ipRewrite:
+        existingConfig.usingCloudflareWarpTraefikPlugin === true ||
         existingConfig.ipRewrite !== undefined
           ? existingConfig.ipRewrite
           : true,
@@ -84,25 +91,74 @@ export class Config extends SecConfig<FastifyWebServerConfig> {
       httpsKey:
         existingConfig.httpsKey !== undefined ? existingConfig.httpsKey : null,
       cors: {
-        enabled: (existingConfig.cors || {}).enabled !== undefined ? (existingConfig.cors || {}).enabled : false,
+        enabled:
+          (existingConfig.cors || {}).enabled !== undefined
+            ? (existingConfig.cors || {}).enabled
+            : false,
         options: {
-          origin: ((existingConfig.cors || {}).options||{}).origin !== undefined ? ((existingConfig.cors || {}).options||{}).origin : true,
-          exposedHeaders: ((existingConfig.cors || {}).options||{}).exposedHeaders !== undefined ? ((existingConfig.cors || {}).options||{}).exposedHeaders : undefined,
-          allowedHeaders: ((existingConfig.cors || {}).options||{}).allowedHeaders !== undefined ? ((existingConfig.cors || {}).options||{}).allowedHeaders :  "content-type",
-          methods:  ((existingConfig.cors || {}).options||{}).methods !== undefined ? ((existingConfig.cors || {}).options||{}).methods : "GET,POST,PUT,PATCH,DELETE,OPTIONS",
-          credentials: ((existingConfig.cors || {}).options||{}).credentials !== undefined ? ((existingConfig.cors || {}).options||{}).credentials : false,
-          maxAge:  ((existingConfig.cors || {}).options||{}).maxAge !== undefined ? ((existingConfig.cors || {}).options||{}).maxAge : 13000,
-          preflightContinue:  ((existingConfig.cors || {}).options||{}).preflightContinue !== undefined ? ((existingConfig.cors || {}).options||{}).preflightContinue : false,
-          optionsSuccessStatus:  ((existingConfig.cors || {}).options||{}).optionsSuccessStatus !== undefined ? ((existingConfig.cors || {}).options||{}).optionsSuccessStatus : 200,
-          preflight:  ((existingConfig.cors || {}).options||{}).preflight !== undefined ? ((existingConfig.cors || {}).options||{}).preflight : true,
-          strictPreflight:  ((existingConfig.cors || {}).options||{}).strictPreflight !== undefined ? ((existingConfig.cors || {}).options||{}).strictPreflight : false,
+          origin:
+            ((existingConfig.cors || {}).options || {}).origin !== undefined
+              ? ((existingConfig.cors || {}).options || {}).origin
+              : true,
+          exposedHeaders:
+            ((existingConfig.cors || {}).options || {}).exposedHeaders !==
+            undefined
+              ? ((existingConfig.cors || {}).options || {}).exposedHeaders
+              : undefined,
+          allowedHeaders:
+            ((existingConfig.cors || {}).options || {}).allowedHeaders !==
+            undefined
+              ? ((existingConfig.cors || {}).options || {}).allowedHeaders
+              : "content-type",
+          methods:
+            ((existingConfig.cors || {}).options || {}).methods !== undefined
+              ? ((existingConfig.cors || {}).options || {}).methods
+              : "GET,POST,PUT,PATCH,DELETE,OPTIONS",
+          credentials:
+            ((existingConfig.cors || {}).options || {}).credentials !==
+            undefined
+              ? ((existingConfig.cors || {}).options || {}).credentials
+              : false,
+          maxAge:
+            ((existingConfig.cors || {}).options || {}).maxAge !== undefined
+              ? ((existingConfig.cors || {}).options || {}).maxAge
+              : 13000,
+          preflightContinue:
+            ((existingConfig.cors || {}).options || {}).preflightContinue !==
+            undefined
+              ? ((existingConfig.cors || {}).options || {}).preflightContinue
+              : false,
+          optionsSuccessStatus:
+            ((existingConfig.cors || {}).options || {}).optionsSuccessStatus !==
+            undefined
+              ? ((existingConfig.cors || {}).options || {}).optionsSuccessStatus
+              : 200,
+          preflight:
+            ((existingConfig.cors || {}).options || {}).preflight !== undefined
+              ? ((existingConfig.cors || {}).options || {}).preflight
+              : true,
+          strictPreflight:
+            ((existingConfig.cors || {}).options || {}).strictPreflight !==
+            undefined
+              ? ((existingConfig.cors || {}).options || {}).strictPreflight
+              : false,
         },
       },
       rateLimit: {
-        enabled: (existingConfig.rateLimit || {}).enabled !== undefined ? (existingConfig.rateLimit || {}).enabled : false,
+        enabled:
+          (existingConfig.rateLimit || {}).enabled !== undefined
+            ? (existingConfig.rateLimit || {}).enabled
+            : false,
         options: {
-          max: ((existingConfig.rateLimit || {}).options||{}).max !== undefined ? ((existingConfig.rateLimit || {}).options||{}).max : 500,
-          timeWindow: ((existingConfig.rateLimit || {}).options||{}).timeWindow !== undefined ? ((existingConfig.rateLimit || {}).options||{}).timeWindow: "15 minute",
+          max:
+            ((existingConfig.rateLimit || {}).options || {}).max !== undefined
+              ? ((existingConfig.rateLimit || {}).options || {}).max
+              : 500,
+          timeWindow:
+            ((existingConfig.rateLimit || {}).options || {}).timeWindow !==
+            undefined
+              ? ((existingConfig.rateLimit || {}).options || {}).timeWindow
+              : "15 minute",
         },
       },
     };

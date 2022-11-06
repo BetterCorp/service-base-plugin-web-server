@@ -214,7 +214,9 @@ export class Service
     }
     if ((await self.getPluginConfig()).ipRewrite) {
       self.log.info(`Enabled IP Service`);
-      self.register(fastifyIP);
+      self.register(fastifyIP, {
+        cloudflareWarpTraefikPlugin: (await self.getPluginConfig()).usingCloudflareWarpTraefikPlugin
+      });
     }
     if ((await self.getPluginConfig()).health) {
       self.get("/health", (req, res) => {
