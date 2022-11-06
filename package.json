@@ -37,6 +37,6 @@
     "fastify": "^4.9.2",
     "fastify-plugin": "^4.3.0",
     "jsonwebtoken": "^8.5.1",
-    "jwks-rsa": "^2.1.4"
+    "jwks-rsa": "^3.0.0"
   }
 }
