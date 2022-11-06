@@ -40,6 +40,7 @@ export interface FastifyRateLimit {
   options: RateLimitOptions;
 }
 export interface FastifyWebServerConfig {
+  health: boolean; // Enable /health endpoint: Used to monitoring
   cors: FastifyCors;
   rateLimit: FastifyRateLimit;
   ipRewrite: boolean; // Rewrite the IP: For Cloudflare and proxies
@@ -58,6 +59,7 @@ export class Config extends SecConfig<FastifyWebServerConfig> {
     existingConfig: FastifyWebServerConfig
   ): FastifyWebServerConfig {
     return {
+      health: existingConfig.health !== undefined ? existingConfig.health : false,
       host: existingConfig.host !== undefined ? existingConfig.host : "0.0.0.0",
       httpPort:
         existingConfig.httpPort !== undefined ? existingConfig.httpPort : 80,

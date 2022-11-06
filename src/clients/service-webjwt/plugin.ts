@@ -439,8 +439,6 @@ export class webJwtLocal extends ServicesClient<
           if (decoded === undefined) return resolve(false);
           if (decoded.header !== undefined) return resolve(false);
           if ((decoded as Token).iss === undefined) return resolve(false);
-          if (self.TokenConfig.issuer !== (decoded as Token).iss)
-            return resolve(false);
           resolve(decoded as Token);
         }
       );

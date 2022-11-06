@@ -27,7 +27,7 @@ import { hostname } from "os";
 import { Server as HServer } from "http";
 import { Server as HSServer } from "https";
 import { ServiceCallable, ServicesBase } from "@bettercorp/service-base";
-import { FastifyWebServerConfig, IWebServerConfigServer } from './sec.config';
+import { FastifyWebServerConfig, IWebServerConfigServer } from "./sec.config";
 
 export interface fastifyCallableMethods {
   register(
@@ -216,20 +216,22 @@ export class Service
       self.log.info(`Enabled IP Service`);
       self.register(fastifyIP);
     }
-    self.get("/health", (req, res) => {
-      res.header("Content-Type", "application/json");
-      res.code(200).send({
-        requestId: req.id,
-        /*requestIp: {
+    if ((await self.getPluginConfig()).health) {
+      self.get("/health", (req, res) => {
+        res.header("Content-Type", "application/json");
+        res.code(200).send({
+          requestId: req.id,
+          /*requestIp: {
             ip: req.ip,
             ips: req.ips
           },*/
-        requestHostname: req.hostname,
-        time: new Date().getTime(),
-        alive: true,
-        clusterId: hostname(),
+          requestHostname: req.hostname,
+          time: new Date().getTime(),
+          alive: true,
+          clusterId: hostname(),
+        });
       });
-    });
+    }
   }
   public override async run(): Promise<void> {
     const self = this;
@@ -240,8 +242,10 @@ export class Service
         IWebServerConfigServer.httpAndHttps
     ) {
       self.HTTPFastify.listen(
-        (await self.getPluginConfig()).httpPort,
-        (await self.getPluginConfig()).host,
+        {
+          host: (await self.getPluginConfig()).host,
+          port: (await self.getPluginConfig()).httpPort,
+        },
         async () =>
           console.log(
             `[HTTP] Listening ${(await self.getPluginConfig()).host}:${
@@ -261,8 +265,10 @@ export class Service
         IWebServerConfigServer.httpAndHttps
     ) {
       self.HTTPSFastify.listen(
-        (await self.getPluginConfig()).httpsPort,
-        (await self.getPluginConfig()).host,
+        {
+          host: (await self.getPluginConfig()).host,
+          port: (await self.getPluginConfig()).httpsPort,
+        },
         async () =>
           console.log(
             `[HTTPS] Listening ${(await self.getPluginConfig()).host}:${
