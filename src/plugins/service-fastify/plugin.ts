@@ -246,12 +246,10 @@ export class Service
           host: (await self.getPluginConfig()).host,
           port: (await self.getPluginConfig()).httpPort,
         },
-        async () =>
-          console.log(
-            `[HTTP] Listening ${(await self.getPluginConfig()).host}:${
-              (await self.getPluginConfig()).httpPort
-            } for WW!`
-          )
+        async (err, address) =>
+          err
+            ? self.log.fatal(err)
+            : self.log.info(`[HTTP] Listening ${address} for WW!`)
       );
       self.log.info(
         `[HTTP] Server started ${(await self.getPluginConfig()).host}:${
@@ -269,12 +267,10 @@ export class Service
           host: (await self.getPluginConfig()).host,
           port: (await self.getPluginConfig()).httpsPort,
         },
-        async () =>
-          console.log(
-            `[HTTPS] Listening ${(await self.getPluginConfig()).host}:${
-              (await self.getPluginConfig()).httpsPort
-            }!`
-          )
+        async (err, address) =>
+          err
+            ? self.log.fatal(err)
+            : self.log.info(`[HTTPS] Listening ${address}!`)
       );
       self.log.info(
         `[HTTPS] Server started ${(await self.getPluginConfig()).host}:${
