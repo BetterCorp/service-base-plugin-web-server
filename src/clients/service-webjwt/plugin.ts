@@ -18,7 +18,7 @@ import {
   SigningKeyCallback,
   verify,
 } from "jsonwebtoken";
-import { JwksClient, Options } from 'jwks-rsa';
+import { JwksClient, Options } from "jwks-rsa";
 
 export class webJwtExpress extends ServicesClient<
   ServiceCallable,
@@ -310,16 +310,18 @@ export class webJwtLocal extends ServicesClient<
   IEJWTPluginConfig
 > {
   public override readonly _pluginName: string = "service-webjwt";
-  private RequestConfig: {
+  private RequestConfig!: {
     bearerStr: string;
     queryKey: string;
     defaultTokenType: EJWTTokenType;
     allowedTokenTypes: Array<EJWTTokenType>;
   };
-  private JWTClient: JwksClient;
-  private TokenConfig: VerifyOptions;
-  constructor(
-    self: ServicesBase,
+  private JWTClient!: JwksClient;
+  private TokenConfig!: VerifyOptions;
+  constructor(self: ServicesBase) {
+    super(self);
+  }
+  public async init(
     config: {
       bearerStr: string;
       queryKey: string;
@@ -329,7 +331,6 @@ export class webJwtLocal extends ServicesClient<
     jwtConfig: Options,
     tokenConfig: VerifyOptions
   ) {
-    super(self);
     this.RequestConfig = config;
     this.TokenConfig = tokenConfig;
     this.JWTClient = new JwksClient(jwtConfig);
@@ -429,19 +430,14 @@ export class webJwtLocal extends ServicesClient<
     return new Promise((resolve) => {
       if (token === undefined) return resolve(false);
       if (token === null) return resolve(false);
-      verify(
-        token,
-        self.getJWTKey,
-        self.TokenConfig,
-        (error, decoded) => {
-          if (error !== null) return resolve(false);
-          if (typeof decoded === "string") return resolve(false);
-          if (decoded === undefined) return resolve(false);
-          if (decoded.header !== undefined) return resolve(false);
-          if ((decoded as Token).iss === undefined) return resolve(false);
-          resolve(decoded as Token);
-        }
-      );
+      verify(token, self.getJWTKey, self.TokenConfig, (error, decoded) => {
+        if (error !== null) return resolve(false);
+        if (typeof decoded === "string") return resolve(false);
+        if (decoded === undefined) return resolve(false);
+        if (decoded.header !== undefined) return resolve(false);
+        if ((decoded as Token).iss === undefined) return resolve(false);
+        resolve(decoded as Token);
+      });
     });
   }
 }
