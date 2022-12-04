@@ -154,7 +154,7 @@ export class Service
       });
     }
     if ((await self.getPluginConfig()).health) {
-      self.get("/health", async (params, query, req, res) => {
+      self.get("/health", async (params, query, res, req) => {
         let checkResults: IDictionary<boolean> = {};
         for (let key of Object.keys(self.HealthChecks)) {
           checkResults[key] = await Promise.race<boolean>([
@@ -290,7 +290,7 @@ export class Service
     server.server.head(
       path,
       async (req, reply) =>
-        await handler(req.params as any, req.query, req, reply)
+        await handler(reply, req.params as any, req.query, req)
     );
     this.log.debug(`[${server.type}] initForPlugins [HEAD] OKAY`);
   }
@@ -304,7 +304,7 @@ export class Service
     server.server.get(
       path,
       async (req, reply) =>
-        await handler(req.params as any, req.query, req, reply)
+        await handler(reply, req.params as any, req.query, req)
     );
     this.log.debug(`[${server.type}] initForPlugins [GET] OKAY`);
   }
@@ -317,7 +317,7 @@ export class Service
     server.server.post(
       path,
       async (req, reply) =>
-        await handler(req.params as any, req.query, req.body, req, reply)
+        await handler(reply, req.params as any, req.query, req.body, req)
     );
     this.log.debug(`[${server.type}] initForPlugins [POST] OKAY`);
   }
@@ -330,7 +330,7 @@ export class Service
     server.server.put(
       path,
       async (req, reply) =>
-        await handler(req.params as any, req.query, req.body, req, reply)
+        await handler(reply, req.params as any, req.query, req.body, req)
     );
     this.log.debug(`[${server.type}] initForPlugins [PUT] OKAY`);
   }
@@ -343,7 +343,7 @@ export class Service
     server.server.delete(
       path,
       async (req, reply) =>
-        await handler(req.params as any, req.query, req.body, req, reply)
+        await handler(reply, req.params as any, req.query, req.body, req)
     );
     this.log.debug(`[${server.type}] initForPlugins [DELETE] OKAY`);
   }
@@ -356,7 +356,7 @@ export class Service
     server.server.patch(
       path,
       async (req, reply) =>
-        await handler(req.params as any, req.query, req.body, req, reply)
+        await handler(reply, req.params as any, req.query, req.body, req)
     );
     this.log.debug(`[${server.type}] initForPlugins [PATCH] OKAY`);
   }
@@ -369,7 +369,7 @@ export class Service
     server.server.options(
       path,
       async (req, reply) =>
-        await handler(req.params as any, req.query, req, reply)
+        await handler(reply, req.params as any, req.query, req)
     );
     this.log.debug(`[${server.type}] initForPlugins [OPTIONS] OKAY`);
   }
@@ -382,7 +382,7 @@ export class Service
     server.server.all(
       path,
       async (req, reply) =>
-        await handler(req.params as any, req.query, req.body, req, reply)
+        await handler(reply, req.params as any, req.query, req.body, req)
     );
     this.log.debug(`[${server.type}] initForPlugins [ALL] OKAY`);
   }

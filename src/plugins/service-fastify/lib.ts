@@ -66,6 +66,7 @@ export type FastifyRequestPath<
 
 export interface FastifyRequestHandler<Path extends string> {
   (
+    reply: FastifyReply,
     params: Readonly<ParamsFromPath<Path>>,
     query: any,
     body: any,
@@ -77,12 +78,12 @@ export interface FastifyRequestHandler<Path extends string> {
       FastifyTypeProviderDefault,
       any,
       FastifyBaseLogger
-    >,
-    reply: FastifyReply
+    >
   ): Promise<void>;
 }
 export interface FastifyNoBodyRequestHandler<Path extends string> {
   (
+    reply: FastifyReply,
     params: Readonly<ParamsFromPath<Path>>,
     query: any,
     request: FastifyRequest<
@@ -93,7 +94,6 @@ export interface FastifyNoBodyRequestHandler<Path extends string> {
       FastifyTypeProviderDefault,
       any,
       FastifyBaseLogger
-    >,
-    reply: FastifyReply
+    >
   ): Promise<void>;
 }
