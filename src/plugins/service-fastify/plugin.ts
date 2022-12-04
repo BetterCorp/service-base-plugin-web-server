@@ -281,14 +281,19 @@ export class Service
     server.server.register(plugin, opts);
     this.log.debug(`[${server.type}] initForPlugins [USE] OKAY`);
   }
+  private getFinalPath(path: string): string {
+    let finalPath: string = path;
+    if (finalPath.endsWith("/")) finalPath = path.substring(0, finalPath.length - 1);
+    return finalPath;
+  }
   public async head<Path extends string>(
     path: Path,
     handler: FastifyNoBodyRequestHandler<Path>
   ): Promise<void> {
     let server = await this.getServerToListenTo();
-    this.log.debug(`[${server.type}] initForPlugins [HEAD]${path}`);
+    this.log.debug(`[${server.type}] initForPlugins [HEAD]${this.getFinalPath(path)}`);
     server.server.head(
-      path,
+      this.getFinalPath(path),
       async (req, reply) =>
         await handler(reply, req.params as any, req.query, req)
     );
@@ -300,9 +305,9 @@ export class Service
     handler: FastifyNoBodyRequestHandler<Path>
   ): Promise<void> {
     let server = await this.getServerToListenTo();
-    this.log.debug(`[${server.type}] initForPlugins [GET]${path}`);
+    this.log.debug(`[${server.type}] initForPlugins [GET]${this.getFinalPath(path)}`);
     server.server.get(
-      path,
+      this.getFinalPath(path),
       async (req, reply) =>
         await handler(reply, req.params as any, req.query, req)
     );
@@ -313,9 +318,9 @@ export class Service
     handler: FastifyRequestHandler<Path>
   ): Promise<void> {
     let server = await this.getServerToListenTo();
-    this.log.debug(`[${server.type}] initForPlugins [POST]${path}`);
+    this.log.debug(`[${server.type}] initForPlugins [POST]${this.getFinalPath(path)}`);
     server.server.post(
-      path,
+      this.getFinalPath(path),
       async (req, reply) =>
         await handler(reply, req.params as any, req.query, req.body, req)
     );
@@ -326,9 +331,9 @@ export class Service
     handler: FastifyRequestHandler<Path>
   ): Promise<void> {
     let server = await this.getServerToListenTo();
-    this.log.debug(`[${server.type}] initForPlugins [PUT]${path}`);
+    this.log.debug(`[${server.type}] initForPlugins [PUT]${this.getFinalPath(path)}`);
     server.server.put(
-      path,
+      this.getFinalPath(path),
       async (req, reply) =>
         await handler(reply, req.params as any, req.query, req.body, req)
     );
@@ -339,9 +344,9 @@ export class Service
     handler: FastifyRequestHandler<Path>
   ): Promise<void> {
     let server = await this.getServerToListenTo();
-    this.log.debug(`[${server.type}] initForPlugins [DELETE]${path}`);
+    this.log.debug(`[${server.type}] initForPlugins [DELETE]${this.getFinalPath(path)}`);
     server.server.delete(
-      path,
+      this.getFinalPath(path),
       async (req, reply) =>
         await handler(reply, req.params as any, req.query, req.body, req)
     );
@@ -352,9 +357,9 @@ export class Service
     handler: FastifyRequestHandler<Path>
   ): Promise<void> {
     let server = await this.getServerToListenTo();
-    this.log.debug(`[${server.type}] initForPlugins [PATCH]${path}`);
+    this.log.debug(`[${server.type}] initForPlugins [PATCH]${this.getFinalPath(path)}`);
     server.server.patch(
-      path,
+      this.getFinalPath(path),
       async (req, reply) =>
         await handler(reply, req.params as any, req.query, req.body, req)
     );
@@ -365,9 +370,9 @@ export class Service
     handler: FastifyNoBodyRequestHandler<Path>
   ): Promise<void> {
     let server = await this.getServerToListenTo();
-    this.log.debug(`[${server.type}] initForPlugins [OPTIONS]${path}`);
+    this.log.debug(`[${server.type}] initForPlugins [OPTIONS]${this.getFinalPath(path)}`);
     server.server.options(
-      path,
+      this.getFinalPath(path),
       async (req, reply) =>
         await handler(reply, req.params as any, req.query, req)
     );
@@ -378,9 +383,9 @@ export class Service
     handler: FastifyRequestHandler<Path>
   ): Promise<void> {
     let server = await this.getServerToListenTo();
-    this.log.debug(`[${server.type}] initForPlugins [ALL]${path}`);
+    this.log.debug(`[${server.type}] initForPlugins [ALL]${this.getFinalPath(path)}`);
     server.server.all(
-      path,
+      this.getFinalPath(path),
       async (req, reply) =>
         await handler(reply, req.params as any, req.query, req.body, req)
     );
