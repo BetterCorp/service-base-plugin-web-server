@@ -1,23 +1,16 @@
 import {
-  FastifyHeadersWithIP,
-  FastifyRequestInterface,
+  FastifyNoBodyRequestHandler,
+  FastifyRequestHandler,
   IWebServerListenerHelper,
 } from "./lib";
 import { readFileSync } from "fs";
 import {
-  ContextConfigDefault,
   fastify,
   FastifyInstance,
   FastifyPluginAsync,
   FastifyPluginCallback,
   FastifyPluginOptions,
   FastifyRegisterOptions,
-  RawReplyDefaultExpression,
-  RawRequestDefaultExpression,
-  RawServerBase,
-  RequestParamsDefault,
-  RequestQuerystringDefault,
-  RouteHandlerMethod,
 } from "fastify";
 import fastifyBsbLogger from "./logger";
 import fastifyCors from "@fastify/cors";
@@ -38,125 +31,37 @@ export interface fastifyCallableMethods {
       | Promise<{ default: FastifyPluginAsync<FastifyPluginOptions> }>,
     opts?: FastifyRegisterOptions<FastifyPluginOptions>
   ): Promise<void>;
-  head<
-    Body = any,
-    Params = RequestParamsDefault,
-    Querystring = RequestQuerystringDefault,
-    Headers = FastifyHeadersWithIP
-  >(
-    path: string,
-    handler: RouteHandlerMethod<
-      RawServerBase,
-      RawRequestDefaultExpression<RawServerBase>,
-      RawReplyDefaultExpression<RawServerBase>,
-      FastifyRequestInterface<Body, Params, Querystring, Headers>,
-      ContextConfigDefault
-    >
+  head<Path extends string>(
+    path: Path,
+    handler: FastifyNoBodyRequestHandler<Path>
   ): Promise<void>;
-  get<
-    Body = any,
-    Params = RequestParamsDefault,
-    Querystring = RequestQuerystringDefault,
-    Headers = FastifyHeadersWithIP
-  >(
-    path: string,
-    handler: RouteHandlerMethod<
-      RawServerBase,
-      RawRequestDefaultExpression<RawServerBase>,
-      RawReplyDefaultExpression<RawServerBase>,
-      FastifyRequestInterface<Body, Params, Querystring, Headers>,
-      ContextConfigDefault
-    >
+  get<Path extends string>(
+    path: Path,
+    handler: FastifyNoBodyRequestHandler<Path>
   ): Promise<void>;
-  post<
-    Body = any,
-    Params = RequestParamsDefault,
-    Querystring = RequestQuerystringDefault,
-    Headers = FastifyHeadersWithIP
-  >(
-    path: string,
-    handler: RouteHandlerMethod<
-      RawServerBase,
-      RawRequestDefaultExpression<RawServerBase>,
-      RawReplyDefaultExpression<RawServerBase>,
-      FastifyRequestInterface<Body, Params, Querystring, Headers>,
-      ContextConfigDefault
-    >
+  post<Path extends string>(
+    path: Path,
+    handler: FastifyRequestHandler<Path>
   ): Promise<void>;
-  put<
-    Body = any,
-    Params = RequestParamsDefault,
-    Querystring = RequestQuerystringDefault,
-    Headers = FastifyHeadersWithIP
-  >(
-    path: string,
-    handler: RouteHandlerMethod<
-      RawServerBase,
-      RawRequestDefaultExpression<RawServerBase>,
-      RawReplyDefaultExpression<RawServerBase>,
-      FastifyRequestInterface<Body, Params, Querystring, Headers>,
-      ContextConfigDefault
-    >
+  put<Path extends string>(
+    path: Path,
+    handler: FastifyRequestHandler<Path>
   ): Promise<void>;
-  delete<
-    Body = any,
-    Params = RequestParamsDefault,
-    Querystring = RequestQuerystringDefault,
-    Headers = FastifyHeadersWithIP
-  >(
-    path: string,
-    handler: RouteHandlerMethod<
-      RawServerBase,
-      RawRequestDefaultExpression<RawServerBase>,
-      RawReplyDefaultExpression<RawServerBase>,
-      FastifyRequestInterface<Body, Params, Querystring, Headers>,
-      ContextConfigDefault
-    >
+  delete<Path extends string>(
+    path: Path,
+    handler: FastifyRequestHandler<Path>
   ): Promise<void>;
-  patch<
-    Body = any,
-    Params = RequestParamsDefault,
-    Querystring = RequestQuerystringDefault,
-    Headers = FastifyHeadersWithIP
-  >(
-    path: string,
-    handler: RouteHandlerMethod<
-      RawServerBase,
-      RawRequestDefaultExpression<RawServerBase>,
-      RawReplyDefaultExpression<RawServerBase>,
-      FastifyRequestInterface<Body, Params, Querystring, Headers>,
-      ContextConfigDefault
-    >
+  patch<Path extends string>(
+    path: Path,
+    handler: FastifyRequestHandler<Path>
   ): Promise<void>;
-  options<
-    Body = any,
-    Params = RequestParamsDefault,
-    Querystring = RequestQuerystringDefault,
-    Headers = FastifyHeadersWithIP
-  >(
-    path: string,
-    handler: RouteHandlerMethod<
-      RawServerBase,
-      RawRequestDefaultExpression<RawServerBase>,
-      RawReplyDefaultExpression<RawServerBase>,
-      FastifyRequestInterface<Body, Params, Querystring, Headers>,
-      ContextConfigDefault
-    >
+  options<Path extends string>(
+    path: Path,
+    handler: FastifyNoBodyRequestHandler<Path>
   ): Promise<void>;
-  all<
-    Body = any,
-    Params = RequestParamsDefault,
-    Querystring = RequestQuerystringDefault,
-    Headers = FastifyHeadersWithIP
-  >(
-    path: string,
-    handler: RouteHandlerMethod<
-      RawServerBase,
-      RawRequestDefaultExpression<RawServerBase>,
-      RawReplyDefaultExpression<RawServerBase>,
-      FastifyRequestInterface<Body, Params, Querystring, Headers>,
-      ContextConfigDefault
-    >
+  all<Path extends string>(
+    path: Path,
+    handler: FastifyRequestHandler<Path>
   ): Promise<void>;
 }
 
@@ -215,11 +120,12 @@ export class Service
     if ((await self.getPluginConfig()).ipRewrite) {
       self.log.info(`Enabled IP Service`);
       self.register(fastifyIP, {
-        cloudflareWarpTraefikPlugin: (await self.getPluginConfig()).usingCloudflareWarpTraefikPlugin
+        cloudflareWarpTraefikPlugin: (await self.getPluginConfig())
+          .usingCloudflareWarpTraefikPlugin,
       });
     }
     if ((await self.getPluginConfig()).health) {
-      self.get("/health", (req, res) => {
+      self.get("/health", async (params, query, req, res) => {
         res.header("Content-Type", "application/json");
         res.code(200).send({
           requestId: req.id,
@@ -334,165 +240,77 @@ export class Service
     server.server.register(plugin, opts);
     this.log.debug(`[${server.type}] initForPlugins [USE] OKAY`);
   }
-  public async head<
-    Body = any,
-    Params = RequestParamsDefault,
-    Querystring = RequestQuerystringDefault,
-    Headers = FastifyHeadersWithIP
-  >(
-    path: string,
-    handler: RouteHandlerMethod<
-      RawServerBase,
-      RawRequestDefaultExpression<RawServerBase>,
-      RawReplyDefaultExpression<RawServerBase>,
-      FastifyRequestInterface<Body, Params, Querystring, Headers>,
-      ContextConfigDefault
-    >
+  public async head<Path extends string>(
+    path: Path,
+    handler: FastifyNoBodyRequestHandler<Path>
   ): Promise<void> {
     let server = await this.getServerToListenTo();
     this.log.debug(`[${server.type}] initForPlugins [HEAD]${path}`);
-    server.server.head(path, handler as any);
+    server.server.head(path, async (req, reply) => await handler(req.params as any, req.query, req, reply));
     this.log.debug(`[${server.type}] initForPlugins [HEAD] OKAY`);
   }
 
-  public async get<
-    Body = any,
-    Params = RequestParamsDefault,
-    Querystring = RequestQuerystringDefault,
-    Headers = FastifyHeadersWithIP
-  >(
-    path: string,
-    handler: RouteHandlerMethod<
-      RawServerBase,
-      RawRequestDefaultExpression<RawServerBase>,
-      RawReplyDefaultExpression<RawServerBase>,
-      FastifyRequestInterface<Body, Params, Querystring, Headers>,
-      ContextConfigDefault
-    >
+  public async get<Path extends string>(
+    path: Path,
+    handler: FastifyNoBodyRequestHandler<Path>
   ): Promise<void> {
     let server = await this.getServerToListenTo();
     this.log.debug(`[${server.type}] initForPlugins [GET]${path}`);
-    server.server.get(path, handler as any);
+    server.server.get(path, async (req, reply) => await handler(req.params as any, req.query, req, reply));
     this.log.debug(`[${server.type}] initForPlugins [GET] OKAY`);
   }
-  public async post<
-    Body = any,
-    Params = RequestParamsDefault,
-    Querystring = RequestQuerystringDefault,
-    Headers = FastifyHeadersWithIP
-  >(
-    path: string,
-    handler: RouteHandlerMethod<
-      RawServerBase,
-      RawRequestDefaultExpression<RawServerBase>,
-      RawReplyDefaultExpression<RawServerBase>,
-      FastifyRequestInterface<Body, Params, Querystring, Headers>,
-      ContextConfigDefault
-    >
+  public async post<Path extends string>(
+    path: Path,
+    handler: FastifyRequestHandler<Path>
   ): Promise<void> {
     let server = await this.getServerToListenTo();
     this.log.debug(`[${server.type}] initForPlugins [POST]${path}`);
-    server.server.post(path, handler as any);
+    server.server.post(path, async (req, reply) => await handler(req.params as any, req.query, req.body, req, reply));
     this.log.debug(`[${server.type}] initForPlugins [POST] OKAY`);
   }
-  public async put<
-    Body = any,
-    Params = RequestParamsDefault,
-    Querystring = RequestQuerystringDefault,
-    Headers = FastifyHeadersWithIP
-  >(
-    path: string,
-    handler: RouteHandlerMethod<
-      RawServerBase,
-      RawRequestDefaultExpression<RawServerBase>,
-      RawReplyDefaultExpression<RawServerBase>,
-      FastifyRequestInterface<Body, Params, Querystring, Headers>,
-      ContextConfigDefault
-    >
+  public async put<Path extends string>(
+    path: Path,
+    handler: FastifyRequestHandler<Path>
   ): Promise<void> {
     let server = await this.getServerToListenTo();
     this.log.debug(`[${server.type}] initForPlugins [PUT]${path}`);
-    server.server.put(path, handler as any);
+    server.server.put(path, async (req, reply) => await handler(req.params as any, req.query, req.body, req, reply));
     this.log.debug(`[${server.type}] initForPlugins [PUT] OKAY`);
   }
-  public async delete<
-    Body = any,
-    Params = RequestParamsDefault,
-    Querystring = RequestQuerystringDefault,
-    Headers = FastifyHeadersWithIP
-  >(
-    path: string,
-    handler: RouteHandlerMethod<
-      RawServerBase,
-      RawRequestDefaultExpression<RawServerBase>,
-      RawReplyDefaultExpression<RawServerBase>,
-      FastifyRequestInterface<Body, Params, Querystring, Headers>,
-      ContextConfigDefault
-    >
+  public async delete<Path extends string>(
+    path: Path,
+    handler: FastifyRequestHandler<Path>
   ): Promise<void> {
     let server = await this.getServerToListenTo();
     this.log.debug(`[${server.type}] initForPlugins [DELETE]${path}`);
-    server.server.delete(path, handler as any);
+    server.server.delete(path, async (req, reply) => await handler(req.params as any, req.query, req.body, req, reply));
     this.log.debug(`[${server.type}] initForPlugins [DELETE] OKAY`);
   }
-  public async patch<
-    Body = any,
-    Params = RequestParamsDefault,
-    Querystring = RequestQuerystringDefault,
-    Headers = FastifyHeadersWithIP
-  >(
-    path: string,
-    handler: RouteHandlerMethod<
-      RawServerBase,
-      RawRequestDefaultExpression<RawServerBase>,
-      RawReplyDefaultExpression<RawServerBase>,
-      FastifyRequestInterface<Body, Params, Querystring, Headers>,
-      ContextConfigDefault
-    >
+  public async patch<Path extends string>(
+    path: Path,
+    handler: FastifyRequestHandler<Path>
   ): Promise<void> {
     let server = await this.getServerToListenTo();
     this.log.debug(`[${server.type}] initForPlugins [PATCH]${path}`);
-    server.server.patch(path, handler as any);
+    server.server.patch(path, async (req, reply) => await handler(req.params as any, req.query, req.body, req, reply));
     this.log.debug(`[${server.type}] initForPlugins [PATCH] OKAY`);
   }
-  public async options<
-    Body = any,
-    Params = RequestParamsDefault,
-    Querystring = RequestQuerystringDefault,
-    Headers = FastifyHeadersWithIP
-  >(
-    path: string,
-    handler: RouteHandlerMethod<
-      RawServerBase,
-      RawRequestDefaultExpression<RawServerBase>,
-      RawReplyDefaultExpression<RawServerBase>,
-      FastifyRequestInterface<Body, Params, Querystring, Headers>,
-      ContextConfigDefault
-    >
+  public async options<Path extends string>(
+    path: Path,
+    handler: FastifyNoBodyRequestHandler<Path>
   ): Promise<void> {
     let server = await this.getServerToListenTo();
     this.log.debug(`[${server.type}] initForPlugins [OPTIONS]${path}`);
-    server.server.options(path, handler as any);
+    server.server.options(path, async (req, reply) => await handler(req.params as any, req.query, req, reply));
     this.log.debug(`[${server.type}] initForPlugins [OPTIONS] OKAY`);
   }
-  public async all<
-    Body = any,
-    Params = RequestParamsDefault,
-    Querystring = RequestQuerystringDefault,
-    Headers = FastifyHeadersWithIP
-  >(
-    path: string,
-    handler: RouteHandlerMethod<
-      RawServerBase,
-      RawRequestDefaultExpression<RawServerBase>,
-      RawReplyDefaultExpression<RawServerBase>,
-      FastifyRequestInterface<Body, Params, Querystring, Headers>,
-      ContextConfigDefault
-    >
+  public async all<Path extends string>(
+    path: Path,
+    handler: FastifyRequestHandler<Path>
   ): Promise<void> {
     let server = await this.getServerToListenTo();
     this.log.debug(`[${server.type}] initForPlugins [ALL]${path}`);
-    server.server.all(path, handler as any);
+    server.server.all(path, async (req, reply) => await handler(req.params as any, req.query, req.body, req, reply));
     this.log.debug(`[${server.type}] initForPlugins [ALL] OKAY`);
   }
 }

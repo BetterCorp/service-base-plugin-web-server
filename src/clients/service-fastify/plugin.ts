@@ -1,24 +1,18 @@
 import { ServiceCallable, ServicesClient } from "@bettercorp/service-base";
 import {
-  FastifyBaseLogger,
   FastifyPluginAsync,
   FastifyPluginCallback,
   FastifyPluginOptions,
   FastifyRegisterOptions,
-  FastifySchema,
   FastifyTypeProviderDefault,
-  RawServerBase,
   RawServerDefault,
-  RouteHandlerMethod,
 } from "fastify";
 import {
-  FastifyHeadersWithIP,
-  FastifyRequestInterface,
+  FastifyNoBodyRequestHandler,
+  FastifyRequestHandler,
 } from "../../plugins/service-fastify/lib";
 import { FastifyWebServerConfig } from "../../plugins/service-fastify/sec.config";
 import { fastifyCallableMethods } from "../../plugins/service-fastify/plugin";
-import { IncomingMessage, ServerResponse } from "http";
-import { Http2ServerRequest, Http2ServerResponse } from "http2";
 
 export class fastify
   extends ServicesClient<
@@ -65,163 +59,51 @@ export class fastify
   ): Promise<void> {
     await this._plugin.callPluginMethod("register", plugin, opts);
   }
-  public async head<
-    Body = any,
-    Params = unknown,
-    Querystring = unknown,
-    Headers = FastifyHeadersWithIP
-  >(
-    path: string,
-    handler: RouteHandlerMethod<
-      RawServerBase,
-      IncomingMessage | Http2ServerRequest,
-      ServerResponse<IncomingMessage> | Http2ServerResponse,
-      FastifyRequestInterface<Body, Params, Querystring, Headers>,
-      unknown,
-      FastifySchema,
-      FastifyTypeProviderDefault,
-      FastifyBaseLogger
-    >
+  public async head<Path extends string>(
+    path: Path,
+    handler: FastifyNoBodyRequestHandler<Path>
   ): Promise<void> {
     await this._plugin.callPluginMethod("head", path, handler as any);
   }
-  public async get<
-    Body = any,
-    Params = unknown,
-    Querystring = unknown,
-    Headers = FastifyHeadersWithIP
-  >(
-    path: string,
-    handler: RouteHandlerMethod<
-      RawServerBase,
-      IncomingMessage | Http2ServerRequest,
-      ServerResponse<IncomingMessage> | Http2ServerResponse,
-      FastifyRequestInterface<Body, Params, Querystring, Headers>,
-      unknown,
-      FastifySchema,
-      FastifyTypeProviderDefault,
-      FastifyBaseLogger
-    >
+  public async get<Path extends string>(
+    path: Path,
+    handler: FastifyNoBodyRequestHandler<Path>
   ): Promise<void> {
     await this._plugin.callPluginMethod("get", path, handler as any);
   }
-  public async post<
-    Body = any,
-    Params = unknown,
-    Querystring = unknown,
-    Headers = FastifyHeadersWithIP
-  >(
-    path: string,
-    handler: RouteHandlerMethod<
-      RawServerBase,
-      IncomingMessage | Http2ServerRequest,
-      ServerResponse<IncomingMessage> | Http2ServerResponse,
-      FastifyRequestInterface<Body, Params, Querystring, Headers>,
-      unknown,
-      FastifySchema,
-      FastifyTypeProviderDefault,
-      FastifyBaseLogger
-    >
+  public async post<Path extends string>(
+    path: Path,
+    handler: FastifyRequestHandler<Path>
   ): Promise<void> {
     await this._plugin.callPluginMethod("post", path, handler as any);
   }
-  public async put<
-    Body = any,
-    Params = unknown,
-    Querystring = unknown,
-    Headers = FastifyHeadersWithIP
-  >(
-    path: string,
-    handler: RouteHandlerMethod<
-      RawServerBase,
-      IncomingMessage | Http2ServerRequest,
-      ServerResponse<IncomingMessage> | Http2ServerResponse,
-      FastifyRequestInterface<Body, Params, Querystring, Headers>,
-      unknown,
-      FastifySchema,
-      FastifyTypeProviderDefault,
-      FastifyBaseLogger
-    >
+  public async put<Path extends string>(
+    path: Path,
+    handler: FastifyRequestHandler<Path>
   ): Promise<void> {
     await this._plugin.callPluginMethod("put", path, handler as any);
   }
-  public async delete<
-    Body = any,
-    Params = unknown,
-    Querystring = unknown,
-    Headers = FastifyHeadersWithIP
-  >(
-    path: string,
-    handler: RouteHandlerMethod<
-      RawServerBase,
-      IncomingMessage | Http2ServerRequest,
-      ServerResponse<IncomingMessage> | Http2ServerResponse,
-      FastifyRequestInterface<Body, Params, Querystring, Headers>,
-      unknown,
-      FastifySchema,
-      FastifyTypeProviderDefault,
-      FastifyBaseLogger
-    >
+  public async delete<Path extends string>(
+    path: Path,
+    handler: FastifyRequestHandler<Path>
   ): Promise<void> {
     await this._plugin.callPluginMethod("delete", path, handler as any);
   }
-  public async patch<
-    Body = any,
-    Params = unknown,
-    Querystring = unknown,
-    Headers = FastifyHeadersWithIP
-  >(
-    path: string,
-    handler: RouteHandlerMethod<
-      RawServerBase,
-      IncomingMessage | Http2ServerRequest,
-      ServerResponse<IncomingMessage> | Http2ServerResponse,
-      FastifyRequestInterface<Body, Params, Querystring, Headers>,
-      unknown,
-      FastifySchema,
-      FastifyTypeProviderDefault,
-      FastifyBaseLogger
-    >
+  public async patch<Path extends string>(
+    path: Path,
+    handler: FastifyRequestHandler<Path>
   ): Promise<void> {
     await this._plugin.callPluginMethod("patch", path, handler as any);
   }
-  public async options<
-    Body = any,
-    Params = unknown,
-    Querystring = unknown,
-    Headers = FastifyHeadersWithIP
-  >(
-    path: string,
-    handler: RouteHandlerMethod<
-      RawServerBase,
-      IncomingMessage | Http2ServerRequest,
-      ServerResponse<IncomingMessage> | Http2ServerResponse,
-      FastifyRequestInterface<Body, Params, Querystring, Headers>,
-      unknown,
-      FastifySchema,
-      FastifyTypeProviderDefault,
-      FastifyBaseLogger
-    >
+  public async options<Path extends string>(
+    path: Path,
+    handler: FastifyNoBodyRequestHandler<Path>
   ): Promise<void> {
     await this._plugin.callPluginMethod("options", path, handler as any);
   }
-  public async all<
-    Body = any,
-    Params = unknown,
-    Querystring = unknown,
-    Headers = FastifyHeadersWithIP
-  >(
-    path: string,
-    handler: RouteHandlerMethod<
-      RawServerBase,
-      IncomingMessage | Http2ServerRequest,
-      ServerResponse<IncomingMessage> | Http2ServerResponse,
-      FastifyRequestInterface<Body, Params, Querystring, Headers>,
-      unknown,
-      FastifySchema,
-      FastifyTypeProviderDefault,
-      FastifyBaseLogger
-    >
+  public async all<Path extends string>(
+    path: Path,
+    handler: FastifyRequestHandler<Path>
   ): Promise<void> {
     await this._plugin.callPluginMethod("all", path, handler as any);
   }
