@@ -21,8 +21,14 @@ import { Server as HServer } from "http";
 import { Server as HSServer } from "https";
 import { ServiceCallable, ServicesBase } from "@bettercorp/service-base";
 import { FastifyWebServerConfig, IWebServerConfigServer } from "./sec.config";
+import { IDictionary } from "@bettercorp/tools/lib/Interfaces";
 
 export interface fastifyCallableMethods {
+  addHealthCheck(
+    pluginName: string,
+    checkName: string,
+    handler: { (): Promise<boolean> }
+  ): Promise<void>;
   register(
     plugin:
       | FastifyPluginCallback<FastifyPluginOptions>
@@ -78,6 +84,21 @@ export class Service
 {
   private HTTPFastify!: FastifyInstance<HServer>;
   private HTTPSFastify!: FastifyInstance<HSServer>;
+  private HealthChecks: IDictionary<{
+    (): Promise<boolean>;
+  }> = {};
+  async addHealthCheck(
+    pluginName: string,
+    checkName: string,
+    handler: () => Promise<boolean>
+  ): Promise<void> {
+    if (Object.keys(this.HealthChecks).length >= 10)
+      throw "Cannot add more than 10 health checks";
+    const key = `${pluginName}-${checkName}`;
+    if (this.HealthChecks[key] != undefined)
+      throw "Cannot set health check where one alread exists";
+    this.HealthChecks[key] = handler;
+  }
 
   public override async init(): Promise<void> {
     const self = this;
@@ -89,6 +110,10 @@ export class Service
           (await self.getPluginConfig()).httpPort
         }`
       );
+      self.HTTPFastify.setErrorHandler((error, request, reply) => {
+        self.log.error(error);
+        reply.status(500).send("SERVER ERROR");
+      });
     }
     if (
       (await self.getPluginConfig()).server === IWebServerConfigServer.https
@@ -105,6 +130,10 @@ export class Service
           (await self.getPluginConfig()).httpsPort
         }`
       );
+      self.HTTPSFastify.setErrorHandler((error, request, reply) => {
+        self.log.error(error);
+        reply.status(500).send("SERVER ERROR");
+      });
     }
     if ((await self.getPluginConfig()).cors.enabled) {
       self.log.info(`Enabled CORS Service`);
@@ -126,9 +155,21 @@ export class Service
     }
     if ((await self.getPluginConfig()).health) {
       self.get("/health", async (params, query, req, res) => {
+        let checkResults: IDictionary<boolean> = {};
+        for (let key of Object.keys(self.HealthChecks)) {
+          checkResults[key] = await Promise.race<boolean>([
+            new Promise((resolve) =>
+              self.HealthChecks[key]()
+                .then((x) => resolve(x))
+                .catch(() => resolve(false))
+            ),
+            new Promise((resolve) => setTimeout(() => resolve(false), 500)),
+          ]);
+        }
         res.header("Content-Type", "application/json");
         res.code(200).send({
           requestId: req.id,
+          checks: checkResults,
           /*requestIp: {
             ip: req.ip,
             ips: req.ips
@@ -246,7 +287,11 @@ export class Service
   ): Promise<void> {
     let server = await this.getServerToListenTo();
     this.log.debug(`[${server.type}] initForPlugins [HEAD]${path}`);
-    server.server.head(path, async (req, reply) => await handler(req.params as any, req.query, req, reply));
+    server.server.head(
+      path,
+      async (req, reply) =>
+        await handler(req.params as any, req.query, req, reply)
+    );
     this.log.debug(`[${server.type}] initForPlugins [HEAD] OKAY`);
   }
 
@@ -256,7 +301,11 @@ export class Service
   ): Promise<void> {
     let server = await this.getServerToListenTo();
     this.log.debug(`[${server.type}] initForPlugins [GET]${path}`);
-    server.server.get(path, async (req, reply) => await handler(req.params as any, req.query, req, reply));
+    server.server.get(
+      path,
+      async (req, reply) =>
+        await handler(req.params as any, req.query, req, reply)
+    );
     this.log.debug(`[${server.type}] initForPlugins [GET] OKAY`);
   }
   public async post<Path extends string>(
@@ -265,7 +314,11 @@ export class Service
   ): Promise<void> {
     let server = await this.getServerToListenTo();
     this.log.debug(`[${server.type}] initForPlugins [POST]${path}`);
-    server.server.post(path, async (req, reply) => await handler(req.params as any, req.query, req.body, req, reply));
+    server.server.post(
+      path,
+      async (req, reply) =>
+        await handler(req.params as any, req.query, req.body, req, reply)
+    );
     this.log.debug(`[${server.type}] initForPlugins [POST] OKAY`);
   }
   public async put<Path extends string>(
@@ -274,7 +327,11 @@ export class Service
   ): Promise<void> {
     let server = await this.getServerToListenTo();
     this.log.debug(`[${server.type}] initForPlugins [PUT]${path}`);
-    server.server.put(path, async (req, reply) => await handler(req.params as any, req.query, req.body, req, reply));
+    server.server.put(
+      path,
+      async (req, reply) =>
+        await handler(req.params as any, req.query, req.body, req, reply)
+    );
     this.log.debug(`[${server.type}] initForPlugins [PUT] OKAY`);
   }
   public async delete<Path extends string>(
@@ -283,7 +340,11 @@ export class Service
   ): Promise<void> {
     let server = await this.getServerToListenTo();
     this.log.debug(`[${server.type}] initForPlugins [DELETE]${path}`);
-    server.server.delete(path, async (req, reply) => await handler(req.params as any, req.query, req.body, req, reply));
+    server.server.delete(
+      path,
+      async (req, reply) =>
+        await handler(req.params as any, req.query, req.body, req, reply)
+    );
     this.log.debug(`[${server.type}] initForPlugins [DELETE] OKAY`);
   }
   public async patch<Path extends string>(
@@ -292,7 +353,11 @@ export class Service
   ): Promise<void> {
     let server = await this.getServerToListenTo();
     this.log.debug(`[${server.type}] initForPlugins [PATCH]${path}`);
-    server.server.patch(path, async (req, reply) => await handler(req.params as any, req.query, req.body, req, reply));
+    server.server.patch(
+      path,
+      async (req, reply) =>
+        await handler(req.params as any, req.query, req.body, req, reply)
+    );
     this.log.debug(`[${server.type}] initForPlugins [PATCH] OKAY`);
   }
   public async options<Path extends string>(
@@ -301,7 +366,11 @@ export class Service
   ): Promise<void> {
     let server = await this.getServerToListenTo();
     this.log.debug(`[${server.type}] initForPlugins [OPTIONS]${path}`);
-    server.server.options(path, async (req, reply) => await handler(req.params as any, req.query, req, reply));
+    server.server.options(
+      path,
+      async (req, reply) =>
+        await handler(req.params as any, req.query, req, reply)
+    );
     this.log.debug(`[${server.type}] initForPlugins [OPTIONS] OKAY`);
   }
   public async all<Path extends string>(
@@ -310,469 +379,11 @@ export class Service
   ): Promise<void> {
     let server = await this.getServerToListenTo();
     this.log.debug(`[${server.type}] initForPlugins [ALL]${path}`);
-    server.server.all(path, async (req, reply) => await handler(req.params as any, req.query, req.body, req, reply));
+    server.server.all(
+      path,
+      async (req, reply) =>
+        await handler(req.params as any, req.query, req.body, req, reply)
+    );
     this.log.debug(`[${server.type}] initForPlugins [ALL] OKAY`);
   }
 }
-
-/*
-export class Plugin extends CPlugin<IWebServerConfig> {
-  private HTTPFastify!: FastifyInstance<HServer>;
-  private HTTPSFastify!: FastifyInstance<HSServer>;
-
-  // HTTP ONLY SERVER
-  httpRegister(
-    plugin:
-      | FastifyPluginCallback<FastifyPluginOptions>
-      | FastifyPluginAsync<FastifyPluginOptions>
-      | Promise<{ default: FastifyPluginCallback<FastifyPluginOptions> }>
-      | Promise<{ default: FastifyPluginAsync<FastifyPluginOptions> }>,
-    opts?: FastifyRegisterOptions<FastifyPluginOptions>
-  ): Promise<void> {
-    const self = this;
-    return new Promise(async (resolve, reject) => {
-      if (
-        (await self.getPluginConfig()).server === IWebServerConfigServer.https
-      )
-        return reject("HTTP NOT ENABLED");
-      self.log.debug(`[HTTP_ONLY] initForPlugins [USE]`);
-      self.HTTPFastify.register(plugin, opts);
-      self.log.debug(`[HTTP_ONLY] initForPlugins [USE] OKAY`);
-      resolve();
-    });
-  }
-  httpHead<
-    Body = any,
-    Params = RequestParamsDefault,
-    Querystring = RequestQuerystringDefault,
-    Headers = FastifyHeadersWithIP
-  >(
-    path: string,
-    handler: RouteHandlerMethod<
-      RawServerBase,
-      RawRequestDefaultExpression<RawServerBase>,
-      RawReplyDefaultExpression<RawServerBase>,
-      FastifyRequestInterface<Body, Params, Querystring, Headers>,
-      ContextConfigDefault
-    >
-  ): Promise<void> {
-    const self = this;
-    return new Promise(async (resolve) => {
-      let server = await self.getServerToListenTo();
-      self.log.debug(`[${server.type}] initForPlugins [HEAD]${path}`);
-      server.server.head(path, handler);
-      self.log.debug(`[${server.type}] initForPlugins [HEAD] OKAY`);
-      resolve();
-    });
-  }
-  httpGet<
-    Body = any,
-    Params = RequestParamsDefault,
-    Querystring = RequestQuerystringDefault,
-    Headers = FastifyHeadersWithIP
-  >(
-    path: string,
-    handler: RouteHandlerMethod<
-      RawServerBase,
-      RawRequestDefaultExpression<RawServerBase>,
-      RawReplyDefaultExpression<RawServerBase>,
-      FastifyRequestInterface<Body, Params, Querystring, Headers>,
-      ContextConfigDefault
-    >
-  ): Promise<void> {
-    const self = this;
-    return new Promise(async (resolve, reject) => {
-      if (
-        (await self.getPluginConfig()).server === IWebServerConfigServer.https
-      )
-        return reject("HTTP NOT ENABLED");
-      self.log.debug(`[HTTP_ONLY] initForPlugins [GET]${path}`);
-      self.HTTPFastify.get(path, handler);
-      self.log.debug(`[HTTP_ONLY] initForPlugins [GET] OKAY`);
-      resolve();
-    });
-  }
-  httpPost<
-    Body = any,
-    Params = RequestParamsDefault,
-    Querystring = RequestQuerystringDefault,
-    Headers = FastifyHeadersWithIP
-  >(
-    path: string,
-    handler: RouteHandlerMethod<
-      RawServerBase,
-      RawRequestDefaultExpression<RawServerBase>,
-      RawReplyDefaultExpression<RawServerBase>,
-      FastifyRequestInterface<Body, Params, Querystring, Headers>,
-      ContextConfigDefault
-    >
-  ): Promise<void> {
-    const self = this;
-    return new Promise(async (resolve, reject) => {
-      if (
-        (await self.getPluginConfig()).server === IWebServerConfigServer.https
-      )
-        return reject("HTTP NOT ENABLED");
-      self.log.debug(`[HTTP_ONLY] initForPlugins [POST]${path}`);
-      self.HTTPFastify.post(path, handler);
-      self.log.debug(`[HTTP_ONLY] initForPlugins [POST] OKAY`);
-      resolve();
-    });
-  }
-  httpPut<
-    Body = any,
-    Params = RequestParamsDefault,
-    Querystring = RequestQuerystringDefault,
-    Headers = FastifyHeadersWithIP
-  >(
-    path: string,
-    handler: RouteHandlerMethod<
-      RawServerBase,
-      RawRequestDefaultExpression<RawServerBase>,
-      RawReplyDefaultExpression<RawServerBase>,
-      FastifyRequestInterface<Body, Params, Querystring, Headers>,
-      ContextConfigDefault
-    >
-  ): Promise<void> {
-    const self = this;
-    return new Promise(async (resolve, reject) => {
-      if (
-        (await self.getPluginConfig()).server === IWebServerConfigServer.https
-      )
-        return reject("HTTP NOT ENABLED");
-      self.log.debug(`[HTTP_ONLY] initForPlugins [PUT]${path}`);
-      self.HTTPFastify.put(path, handler);
-      self.log.debug(`[HTTP_ONLY] initForPlugins [PUT] OKAY`);
-      resolve();
-    });
-  }
-  httpDelete<
-    Body = any,
-    Params = RequestParamsDefault,
-    Querystring = RequestQuerystringDefault,
-    Headers = FastifyHeadersWithIP
-  >(
-    path: string,
-    handler: RouteHandlerMethod<
-      RawServerBase,
-      RawRequestDefaultExpression<RawServerBase>,
-      RawReplyDefaultExpression<RawServerBase>,
-      FastifyRequestInterface<Body, Params, Querystring, Headers>,
-      ContextConfigDefault
-    >
-  ): Promise<void> {
-    const self = this;
-    return new Promise(async (resolve, reject) => {
-      if (
-        (await self.getPluginConfig()).server === IWebServerConfigServer.https
-      )
-        return reject("HTTP NOT ENABLED");
-      self.log.debug(`[HTTP_ONLY] initForPlugins [DELETE]${path}`);
-      self.HTTPFastify.delete(path, handler);
-      self.log.debug(`[HTTP_ONLY] initForPlugins [DELETE] OKAY`);
-      resolve();
-    });
-  }
-  httpPatch<
-    Body = any,
-    Params = RequestParamsDefault,
-    Querystring = RequestQuerystringDefault,
-    Headers = FastifyHeadersWithIP
-  >(
-    path: string,
-    handler: RouteHandlerMethod<
-      RawServerBase,
-      RawRequestDefaultExpression<RawServerBase>,
-      RawReplyDefaultExpression<RawServerBase>,
-      FastifyRequestInterface<Body, Params, Querystring, Headers>,
-      ContextConfigDefault
-    >
-  ): Promise<void> {
-    const self = this;
-    return new Promise(async (resolve, reject) => {
-      if (
-        (await self.getPluginConfig()).server === IWebServerConfigServer.https
-      )
-        return reject("HTTP NOT ENABLED");
-      self.log.debug(`[HTTP_ONLY] initForPlugins [PATCH]${path}`);
-      self.HTTPFastify.patch(path, handler);
-      self.log.debug(`[HTTP_ONLY] initForPlugins [PATCH] OKAY`);
-      resolve();
-    });
-  }
-  httpOptions<
-    Body = any,
-    Params = RequestParamsDefault,
-    Querystring = RequestQuerystringDefault,
-    Headers = FastifyHeadersWithIP
-  >(
-    path: string,
-    handler: RouteHandlerMethod<
-      RawServerBase,
-      RawRequestDefaultExpression<RawServerBase>,
-      RawReplyDefaultExpression<RawServerBase>,
-      FastifyRequestInterface<Body, Params, Querystring, Headers>,
-      ContextConfigDefault
-    >
-  ): Promise<void> {
-    const self = this;
-    return new Promise(async (resolve, reject) => {
-      if (
-        (await self.getPluginConfig()).server === IWebServerConfigServer.https
-      )
-        return reject("HTTP NOT ENABLED");
-      self.log.debug(`[HTTP_ONLY] initForPlugins [OPTIONS]${path}`);
-      self.HTTPFastify.options(path, handler);
-      self.log.debug(`[HTTP_ONLY] initForPlugins [OPTIONS] OKAY`);
-      resolve();
-    });
-  }
-  httpAll<
-    Body = any,
-    Params = RequestParamsDefault,
-    Querystring = RequestQuerystringDefault,
-    Headers = FastifyHeadersWithIP
-  >(
-    path: string,
-    handler: RouteHandlerMethod<
-      RawServerBase,
-      RawRequestDefaultExpression<RawServerBase>,
-      RawReplyDefaultExpression<RawServerBase>,
-      FastifyRequestInterface<Body, Params, Querystring, Headers>,
-      ContextConfigDefault
-    >
-  ): Promise<void> {
-    const self = this;
-    return new Promise(async (resolve, reject) => {
-      if (
-        (await self.getPluginConfig()).server === IWebServerConfigServer.https
-      )
-        return reject("HTTP NOT ENABLED");
-      self.log.debug(`[HTTP_ONLY] initForPlugins [ALL]${path}`);
-      self.HTTPFastify.all(path, handler);
-      self.log.debug(`[HTTP_ONLY] initForPlugins [ALL] OKAY`);
-      resolve();
-    });
-  }
-
-  // HTTPS ONLY SERVER
-  httpsRegister(
-    plugin:
-      | FastifyPluginCallback<FastifyPluginOptions>
-      | FastifyPluginAsync<FastifyPluginOptions>
-      | Promise<{ default: FastifyPluginCallback<FastifyPluginOptions> }>
-      | Promise<{ default: FastifyPluginAsync<FastifyPluginOptions> }>,
-    opts?: FastifyRegisterOptions<FastifyPluginOptions>
-  ): Promise<void> {
-    const self = this;
-    return new Promise(async (resolve, reject) => {
-      if ((await self.getPluginConfig()).server === IWebServerConfigServer.http)
-        return reject("HTTPS NOT ENABLED");
-      self.log.debug(`[HTTPS_ONLY] initForPlugins [USE]`);
-      self.HTTPSFastify.register(plugin, opts);
-      self.log.debug(`[HTTPS_ONLY] initForPlugins [USE] OKAY`);
-      resolve();
-    });
-  }
-  httpsHead<
-    Body = any,
-    Params = RequestParamsDefault,
-    Querystring = RequestQuerystringDefault,
-    Headers = FastifyHeadersWithIP
-  >(
-    path: string,
-    handler: RouteHandlerMethod<
-      RawServerBase,
-      RawRequestDefaultExpression<RawServerBase>,
-      RawReplyDefaultExpression<RawServerBase>,
-      FastifyRequestInterface<Body, Params, Querystring, Headers>,
-      ContextConfigDefault
-    >
-  ): Promise<void> {
-    const self = this;
-    return new Promise(async (resolve, reject) => {
-      if ((await self.getPluginConfig()).server === IWebServerConfigServer.http)
-        return reject("HTTPS NOT ENABLED");
-      self.log.debug(`[HTTPS_ONLY] initForPlugins [HEAD]${path}`);
-      self.HTTPSFastify.head(path, handler);
-      self.log.debug(`[HTTPS_ONLY] initForPlugins [HEAD] OKAY`);
-      resolve();
-    });
-  }
-  httpsGet<
-    Body = any,
-    Params = RequestParamsDefault,
-    Querystring = RequestQuerystringDefault,
-    Headers = FastifyHeadersWithIP
-  >(
-    path: string,
-    handler: RouteHandlerMethod<
-      RawServerBase,
-      RawRequestDefaultExpression<RawServerBase>,
-      RawReplyDefaultExpression<RawServerBase>,
-      FastifyRequestInterface<Body, Params, Querystring, Headers>,
-      ContextConfigDefault
-    >
-  ): Promise<void> {
-    const self = this;
-    return new Promise(async (resolve, reject) => {
-      if ((await self.getPluginConfig()).server === IWebServerConfigServer.http)
-        return reject("HTTPS NOT ENABLED");
-      self.log.debug(`[HTTPS_ONLY] initForPlugins [GET]${path}`);
-      self.HTTPSFastify.get(path, handler);
-      self.log.debug(`[HTTPS_ONLY] initForPlugins [GET] OKAY`);
-      resolve();
-    });
-  }
-  httpsPost<
-    Body = any,
-    Params = RequestParamsDefault,
-    Querystring = RequestQuerystringDefault,
-    Headers = FastifyHeadersWithIP
-  >(
-    path: string,
-    handler: RouteHandlerMethod<
-      RawServerBase,
-      RawRequestDefaultExpression<RawServerBase>,
-      RawReplyDefaultExpression<RawServerBase>,
-      FastifyRequestInterface<Body, Params, Querystring, Headers>,
-      ContextConfigDefault
-    >
-  ): Promise<void> {
-    const self = this;
-    return new Promise(async (resolve, reject) => {
-      if ((await self.getPluginConfig()).server === IWebServerConfigServer.http)
-        return reject("HTTPS NOT ENABLED");
-      self.log.debug(`[HTTPS_ONLY] initForPlugins [POST]${path}`);
-      self.HTTPSFastify.post(path, handler);
-      self.log.debug(`[HTTPS_ONLY] initForPlugins [POST] OKAY`);
-      resolve();
-    });
-  }
-  httpsPut<
-    Body = any,
-    Params = RequestParamsDefault,
-    Querystring = RequestQuerystringDefault,
-    Headers = FastifyHeadersWithIP
-  >(
-    path: string,
-    handler: RouteHandlerMethod<
-      RawServerBase,
-      RawRequestDefaultExpression<RawServerBase>,
-      RawReplyDefaultExpression<RawServerBase>,
-      FastifyRequestInterface<Body, Params, Querystring, Headers>,
-      ContextConfigDefault
-    >
-  ): Promise<void> {
-    const self = this;
-    return new Promise(async (resolve, reject) => {
-      if ((await self.getPluginConfig()).server === IWebServerConfigServer.http)
-        return reject("HTTPS NOT ENABLED");
-      self.log.debug(`[HTTPS_ONLY] initForPlugins [PUT]${path}`);
-      self.HTTPSFastify.put(path, handler);
-      self.log.debug(`[HTTPS_ONLY] initForPlugins [PUT] OKAY`);
-      resolve();
-    });
-  }
-  httpsDelete<
-    Body = any,
-    Params = RequestParamsDefault,
-    Querystring = RequestQuerystringDefault,
-    Headers = FastifyHeadersWithIP
-  >(
-    path: string,
-    handler: RouteHandlerMethod<
-      RawServerBase,
-      RawRequestDefaultExpression<RawServerBase>,
-      RawReplyDefaultExpression<RawServerBase>,
-      FastifyRequestInterface<Body, Params, Querystring, Headers>,
-      ContextConfigDefault
-    >
-  ): Promise<void> {
-    const self = this;
-    return new Promise(async (resolve, reject) => {
-      if ((await self.getPluginConfig()).server === IWebServerConfigServer.http)
-        return reject("HTTPS NOT ENABLED");
-      self.log.debug(`[HTTPS_ONLY] initForPlugins [DELETE]${path}`);
-      self.HTTPSFastify.delete(path, handler);
-      self.log.debug(`[HTTPS_ONLY] initForPlugins [DELETE] OKAY`);
-      resolve();
-    });
-  }
-  httpsPatch<
-    Body = any,
-    Params = RequestParamsDefault,
-    Querystring = RequestQuerystringDefault,
-    Headers = FastifyHeadersWithIP
-  >(
-    path: string,
-    handler: RouteHandlerMethod<
-      RawServerBase,
-      RawRequestDefaultExpression<RawServerBase>,
-      RawReplyDefaultExpression<RawServerBase>,
-      FastifyRequestInterface<Body, Params, Querystring, Headers>,
-      ContextConfigDefault
-    >
-  ): Promise<void> {
-    const self = this;
-    return new Promise(async (resolve, reject) => {
-      if ((await self.getPluginConfig()).server === IWebServerConfigServer.http)
-        return reject("HTTPS NOT ENABLED");
-      self.log.debug(`[HTTPS_ONLY] initForPlugins [PATCH]${path}`);
-      self.HTTPSFastify.patch(path, handler);
-      self.log.debug(`[HTTPS_ONLY] initForPlugins [PATCH] OKAY`);
-      resolve();
-    });
-  }
-  httpsOptions<
-    Body = any,
-    Params = RequestParamsDefault,
-    Querystring = RequestQuerystringDefault,
-    Headers = FastifyHeadersWithIP
-  >(
-    path: string,
-    handler: RouteHandlerMethod<
-      RawServerBase,
-      RawRequestDefaultExpression<RawServerBase>,
-      RawReplyDefaultExpression<RawServerBase>,
-      FastifyRequestInterface<Body, Params, Querystring, Headers>,
-      ContextConfigDefault
-    >
-  ): Promise<void> {
-    const self = this;
-    return new Promise(async (resolve, reject) => {
-      if ((await self.getPluginConfig()).server === IWebServerConfigServer.http)
-        return reject("HTTPS NOT ENABLED");
-      self.log.debug(`[HTTPS_ONLY] initForPlugins [OPTIONS]${path}`);
-      self.HTTPSFastify.options(path, handler);
-      self.log.debug(`[HTTPS_ONLY] initForPlugins [OPTIONS] OKAY`);
-      resolve();
-    });
-  }
-  httpsAll<
-    Body = any,
-    Params = RequestParamsDefault,
-    Querystring = RequestQuerystringDefault,
-    Headers = FastifyHeadersWithIP
-  >(
-    path: string,
-    handler: RouteHandlerMethod<
-      RawServerBase,
-      RawRequestDefaultExpression<RawServerBase>,
-      RawReplyDefaultExpression<RawServerBase>,
-      FastifyRequestInterface<Body, Params, Querystring, Headers>,
-      ContextConfigDefault
-    >
-  ): Promise<void> {
-    const self = this;
-    return new Promise(async (resolve, reject) => {
-      if ((await self.getPluginConfig()).server === IWebServerConfigServer.http)
-        return reject("HTTPS NOT ENABLED");
-      self.log.debug(`[HTTPS_ONLY] initForPlugins [ALL]${path}`);
-      self.HTTPSFastify.all(path, handler);
-      self.log.debug(`[HTTPS_ONLY] initForPlugins [ALL] OKAY`);
-      resolve();
-    });
-  }
-}
-*/

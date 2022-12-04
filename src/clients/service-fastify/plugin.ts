@@ -14,17 +14,25 @@ import {
 import { FastifyWebServerConfig } from "../../plugins/service-fastify/sec.config";
 import { fastifyCallableMethods } from "../../plugins/service-fastify/plugin";
 
-export class fastify
-  extends ServicesClient<
-    ServiceCallable,
-    ServiceCallable,
-    ServiceCallable,
-    ServiceCallable,
-    fastifyCallableMethods,
-    FastifyWebServerConfig
-  >
-  implements fastifyCallableMethods
-{
+export class fastify extends ServicesClient<
+  ServiceCallable,
+  ServiceCallable,
+  ServiceCallable,
+  ServiceCallable,
+  fastifyCallableMethods,
+  FastifyWebServerConfig
+> {
+  async addHealthCheck(
+    checkName: string,
+    handler: () => Promise<boolean>
+  ): Promise<void> {
+    await this._plugin.callPluginMethod(
+      "addHealthCheck",
+      this._plugin.pluginName,
+      checkName,
+      handler
+    );
+  }
   public override readonly _pluginName: string = "service-fastify";
   public override readonly initAfterPlugins: string[] = ["service-fastify"];
   public override readonly runBeforePlugins: string[] = ["service-fastify"];
