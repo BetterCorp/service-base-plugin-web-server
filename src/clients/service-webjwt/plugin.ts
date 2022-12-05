@@ -88,10 +88,10 @@ export class webJwtExpress extends ServicesClient<
         ) {
           foundToken = `${req.headers.authorization}`.split(" ")[1];
         } else {
-          self._plugin.log.warn("*authorization: no header {bearerStr}", {
+          await self._plugin.log.warn("*authorization: no header {bearerStr}", {
             bearerStr: self.config.bearerStr,
           });
-          self._plugin.log.debug(
+          await self._plugin.log.debug(
             "Headers: {headers}",
             {
               headers: Object.keys(req.headers).map(
@@ -111,10 +111,13 @@ export class webJwtExpress extends ServicesClient<
           Tools.isNullOrUndefined(req.query) ||
           Tools.isNullOrUndefined(req.query[self.config.queryKey])
         ) {
-          self._plugin.log.warn("*authorization: failed no query {queryKey}", {
-            queryKey: self.config.queryKey,
-          });
-          self._plugin.log.debug(
+          await self._plugin.log.warn(
+            "*authorization: failed no query {queryKey}",
+            {
+              queryKey: self.config.queryKey,
+            }
+          );
+          await self._plugin.log.debug(
             "Query: {query}",
             {
               query: Object.keys(req.query).map(
@@ -129,7 +132,7 @@ export class webJwtExpress extends ServicesClient<
       }
 
       if (Tools.isNullOrUndefined(foundToken) || foundToken == "") {
-        self._plugin.log.warn("*authorization: failed no token");
+        await self._plugin.log.warn("*authorization: failed no token");
         return resolve(false);
       }
 
@@ -209,10 +212,10 @@ export class webJwtFastify extends ServicesClient<
         ) {
           foundToken = `${req.headers.authorization}`.split(" ")[1];
         } else {
-          self._plugin.log.warn("*authorization: no header {bearerStr}", {
+          await self._plugin.log.warn("*authorization: no header {bearerStr}", {
             bearerStr: self.config.bearerStr,
           });
-          self._plugin.log.debug(
+          await self._plugin.log.debug(
             "Headers: {headers}",
             {
               headers: Object.keys(req.headers).map(
@@ -232,10 +235,13 @@ export class webJwtFastify extends ServicesClient<
           Tools.isNullOrUndefined(req.query) ||
           Tools.isNullOrUndefined(req.query[self.config.queryKey])
         ) {
-          self._plugin.log.warn("*authorization: failed no query {queryKey}", {
-            queryKey: self.config.queryKey,
-          });
-          self._plugin.log.debug(
+          await self._plugin.log.warn(
+            "*authorization: failed no query {queryKey}",
+            {
+              queryKey: self.config.queryKey,
+            }
+          );
+          await self._plugin.log.debug(
             "Query: {query}",
             {
               query: Object.keys(req.query).map(
@@ -250,7 +256,7 @@ export class webJwtFastify extends ServicesClient<
       }
 
       if (Tools.isNullOrUndefined(foundToken) || foundToken == "") {
-        self._plugin.log.warn("*authorization: failed no token");
+        await self._plugin.log.warn("*authorization: failed no token");
         return resolve(false);
       }
 
@@ -372,10 +378,10 @@ export class webJwtLocal extends ServicesClient<
         ) {
           foundToken = `${req.headers.authorization}`.split(" ")[1];
         } else {
-          self._plugin.log.warn("*authorization: no header {bearerStr}", {
+          await self._plugin.log.warn("*authorization: no header {bearerStr}", {
             bearerStr: self.RequestConfig.bearerStr,
           });
-          self._plugin.log.debug(
+          await self._plugin.log.debug(
             "Headers: {headers}",
             {
               headers: Object.keys(req.headers).map(
@@ -395,10 +401,13 @@ export class webJwtLocal extends ServicesClient<
           Tools.isNullOrUndefined(req.query) ||
           Tools.isNullOrUndefined(req.query[self.RequestConfig.queryKey])
         ) {
-          self._plugin.log.warn("*authorization: failed no query {queryKey}", {
-            queryKey: self.RequestConfig.queryKey,
-          });
-          self._plugin.log.debug(
+          await self._plugin.log.warn(
+            "*authorization: failed no query {queryKey}",
+            {
+              queryKey: self.RequestConfig.queryKey,
+            }
+          );
+          await self._plugin.log.debug(
             "Query: {query}",
             {
               query: Object.keys(req.query).map(
@@ -415,7 +424,7 @@ export class webJwtLocal extends ServicesClient<
       }
 
       if (Tools.isNullOrUndefined(foundToken) || foundToken == "") {
-        self._plugin.log.warn("*authorization: failed no token");
+        await self._plugin.log.warn("*authorization: failed no token");
         return resolve(null);
       }
 

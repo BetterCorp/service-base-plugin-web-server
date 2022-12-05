@@ -105,13 +105,15 @@ export class Service
     if ((await self.getPluginConfig()).server === IWebServerConfigServer.http) {
       self.HTTPFastify = fastify({});
       self.HTTPFastify.register(fastifyBsbLogger, self.log);
-      self.log.info(
+      await self.log.info(
         `[HTTP] Server ready: ${(await self.getPluginConfig()).host}:${
-          (await self.getPluginConfig()).httpPort
+          (
+            await self.getPluginConfig()
+          ).httpPort
         }`
       );
-      self.HTTPFastify.setErrorHandler((error, request, reply) => {
-        self.log.error(error);
+      self.HTTPFastify.setErrorHandler(async (error, request, reply) => {
+        await self.log.error(error);
         reply.status(500).send("SERVER ERROR");
       });
     }
@@ -125,29 +127,31 @@ export class Service
         },
       });
       self.HTTPSFastify.register(fastifyBsbLogger, self.log);
-      self.log.info(
+      await self.log.info(
         `[HTTPS] Server ready: ${(await self.getPluginConfig()).host}:${
-          (await self.getPluginConfig()).httpsPort
+          (
+            await self.getPluginConfig()
+          ).httpsPort
         }`
       );
-      self.HTTPSFastify.setErrorHandler((error, request, reply) => {
-        self.log.error(error);
+      self.HTTPSFastify.setErrorHandler(async (error, request, reply) => {
+        await self.log.error(error);
         reply.status(500).send("SERVER ERROR");
       });
     }
     if ((await self.getPluginConfig()).cors.enabled) {
-      self.log.info(`Enabled CORS Service`);
+      await self.log.info(`Enabled CORS Service`);
       self.register(fastifyCors, (await self.getPluginConfig()).cors.options);
     }
     if ((await self.getPluginConfig()).rateLimit.enabled) {
-      self.log.info(`Enabled Rate Limit Service`);
+      await self.log.info(`Enabled Rate Limit Service`);
       self.register(
         fastifyRateLimit,
         (await self.getPluginConfig()).rateLimit.options
       );
     }
     if ((await self.getPluginConfig()).ipRewrite) {
-      self.log.info(`Enabled IP Service`);
+      await self.log.info(`Enabled IP Service`);
       self.register(fastifyIP, {
         cloudflareWarpTraefikPlugin: (await self.getPluginConfig())
           .usingCloudflareWarpTraefikPlugin,
@@ -184,7 +188,7 @@ export class Service
   }
   public override async run(): Promise<void> {
     const self = this;
-    self.log.debug(`loaded`);
+    await self.log.debug(`loaded`);
     if (
       (await self.getPluginConfig()).server === IWebServerConfigServer.http ||
       (await self.getPluginConfig()).server ===
@@ -197,12 +201,14 @@ export class Service
         },
         async (err, address) =>
           err
-            ? self.log.fatal(err)
-            : self.log.info(`[HTTP] Listening ${address} for WW!`)
+            ? await self.log.fatal(err)
+            : await self.log.info(`[HTTP] Listening ${address} for WW!`)
       );
-      self.log.info(
+      await self.log.info(
         `[HTTP] Server started ${(await self.getPluginConfig()).host}:${
-          (await self.getPluginConfig()).httpPort
+          (
+            await self.getPluginConfig()
+          ).httpPort
         }`
       );
     }
@@ -218,12 +224,14 @@ export class Service
         },
         async (err, address) =>
           err
-            ? self.log.fatal(err)
-            : self.log.info(`[HTTPS] Listening ${address}!`)
+            ? await self.log.fatal(err)
+            : await self.log.info(`[HTTPS] Listening ${address}!`)
       );
-      self.log.info(
+      await self.log.info(
         `[HTTPS] Server started ${(await self.getPluginConfig()).host}:${
-          (await self.getPluginConfig()).httpsPort
+          (
+            await self.getPluginConfig()
+          ).httpsPort
         }`
       );
     }
@@ -240,9 +248,11 @@ export class Service
           }`
         );
       });
-      self.log.info(
+      await self.log.info(
         `[HTTP] Server redirect: ${(await self.getPluginConfig()).host}:${
-          (await self.getPluginConfig()).httpPort
+          (
+            await self.getPluginConfig()
+          ).httpPort
         }`
       );
     }
@@ -277,13 +287,14 @@ export class Service
     opts?: FastifyRegisterOptions<FastifyPluginOptions>
   ): Promise<void> {
     let server = await this.getServerToListenTo();
-    this.log.debug(`[${server.type}] initForPlugins [USE]`);
+    await this.log.debug(`[${server.type}] initForPlugins [USE]`);
     server.server.register(plugin, opts);
-    this.log.debug(`[${server.type}] initForPlugins [USE] OKAY`);
+    await this.log.debug(`[${server.type}] initForPlugins [USE] OKAY`);
   }
   private getFinalPath(path: string): string {
     let finalPath: string = path;
-    if (finalPath.endsWith("/")) finalPath = path.substring(0, finalPath.length - 1);
+    if (finalPath.endsWith("/"))
+      finalPath = path.substring(0, finalPath.length - 1);
     return finalPath;
   }
   public async head<Path extends string>(
@@ -291,13 +302,15 @@ export class Service
     handler: FastifyNoBodyRequestHandler<Path>
   ): Promise<void> {
     let server = await this.getServerToListenTo();
-    this.log.debug(`[${server.type}] initForPlugins [HEAD]${this.getFinalPath(path)}`);
+    await this.log.debug(
+      `[${server.type}] initForPlugins [HEAD]${this.getFinalPath(path)}`
+    );
     server.server.head(
       this.getFinalPath(path),
       async (req, reply) =>
         await handler(reply, req.params as any, req.query, req)
     );
-    this.log.debug(`[${server.type}] initForPlugins [HEAD] OKAY`);
+    await this.log.debug(`[${server.type}] initForPlugins [HEAD] OKAY`);
   }
 
   public async get<Path extends string>(
@@ -305,90 +318,104 @@ export class Service
     handler: FastifyNoBodyRequestHandler<Path>
   ): Promise<void> {
     let server = await this.getServerToListenTo();
-    this.log.debug(`[${server.type}] initForPlugins [GET]${this.getFinalPath(path)}`);
+    await this.log.debug(
+      `[${server.type}] initForPlugins [GET]${this.getFinalPath(path)}`
+    );
     server.server.get(
       this.getFinalPath(path),
       async (req, reply) =>
         await handler(reply, req.params as any, req.query, req)
     );
-    this.log.debug(`[${server.type}] initForPlugins [GET] OKAY`);
+    await this.log.debug(`[${server.type}] initForPlugins [GET] OKAY`);
   }
   public async post<Path extends string>(
     path: Path,
     handler: FastifyRequestHandler<Path>
   ): Promise<void> {
     let server = await this.getServerToListenTo();
-    this.log.debug(`[${server.type}] initForPlugins [POST]${this.getFinalPath(path)}`);
+    await this.log.debug(
+      `[${server.type}] initForPlugins [POST]${this.getFinalPath(path)}`
+    );
     server.server.post(
       this.getFinalPath(path),
       async (req, reply) =>
         await handler(reply, req.params as any, req.query, req.body, req)
     );
-    this.log.debug(`[${server.type}] initForPlugins [POST] OKAY`);
+    await this.log.debug(`[${server.type}] initForPlugins [POST] OKAY`);
   }
   public async put<Path extends string>(
     path: Path,
     handler: FastifyRequestHandler<Path>
   ): Promise<void> {
     let server = await this.getServerToListenTo();
-    this.log.debug(`[${server.type}] initForPlugins [PUT]${this.getFinalPath(path)}`);
+    await this.log.debug(
+      `[${server.type}] initForPlugins [PUT]${this.getFinalPath(path)}`
+    );
     server.server.put(
       this.getFinalPath(path),
       async (req, reply) =>
         await handler(reply, req.params as any, req.query, req.body, req)
     );
-    this.log.debug(`[${server.type}] initForPlugins [PUT] OKAY`);
+    await this.log.debug(`[${server.type}] initForPlugins [PUT] OKAY`);
   }
   public async delete<Path extends string>(
     path: Path,
     handler: FastifyRequestHandler<Path>
   ): Promise<void> {
     let server = await this.getServerToListenTo();
-    this.log.debug(`[${server.type}] initForPlugins [DELETE]${this.getFinalPath(path)}`);
+    await this.log.debug(
+      `[${server.type}] initForPlugins [DELETE]${this.getFinalPath(path)}`
+    );
     server.server.delete(
       this.getFinalPath(path),
       async (req, reply) =>
         await handler(reply, req.params as any, req.query, req.body, req)
     );
-    this.log.debug(`[${server.type}] initForPlugins [DELETE] OKAY`);
+    await this.log.debug(`[${server.type}] initForPlugins [DELETE] OKAY`);
   }
   public async patch<Path extends string>(
     path: Path,
     handler: FastifyRequestHandler<Path>
   ): Promise<void> {
     let server = await this.getServerToListenTo();
-    this.log.debug(`[${server.type}] initForPlugins [PATCH]${this.getFinalPath(path)}`);
+    await this.log.debug(
+      `[${server.type}] initForPlugins [PATCH]${this.getFinalPath(path)}`
+    );
     server.server.patch(
       this.getFinalPath(path),
       async (req, reply) =>
         await handler(reply, req.params as any, req.query, req.body, req)
     );
-    this.log.debug(`[${server.type}] initForPlugins [PATCH] OKAY`);
+    await this.log.debug(`[${server.type}] initForPlugins [PATCH] OKAY`);
   }
   public async options<Path extends string>(
     path: Path,
     handler: FastifyNoBodyRequestHandler<Path>
   ): Promise<void> {
     let server = await this.getServerToListenTo();
-    this.log.debug(`[${server.type}] initForPlugins [OPTIONS]${this.getFinalPath(path)}`);
+    await this.log.debug(
+      `[${server.type}] initForPlugins [OPTIONS]${this.getFinalPath(path)}`
+    );
     server.server.options(
       this.getFinalPath(path),
       async (req, reply) =>
         await handler(reply, req.params as any, req.query, req)
     );
-    this.log.debug(`[${server.type}] initForPlugins [OPTIONS] OKAY`);
+    await this.log.debug(`[${server.type}] initForPlugins [OPTIONS] OKAY`);
   }
   public async all<Path extends string>(
     path: Path,
     handler: FastifyRequestHandler<Path>
   ): Promise<void> {
     let server = await this.getServerToListenTo();
-    this.log.debug(`[${server.type}] initForPlugins [ALL]${this.getFinalPath(path)}`);
+    await this.log.debug(
+      `[${server.type}] initForPlugins [ALL]${this.getFinalPath(path)}`
+    );
     server.server.all(
       this.getFinalPath(path),
       async (req, reply) =>
         await handler(reply, req.params as any, req.query, req.body, req)
     );
-    this.log.debug(`[${server.type}] initForPlugins [ALL] OKAY`);
+    await this.log.debug(`[${server.type}] initForPlugins [ALL] OKAY`);
   }
 }

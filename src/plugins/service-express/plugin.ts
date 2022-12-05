@@ -23,7 +23,7 @@ export class Service
   public override async init(): Promise<void> {
     if ((await this.getPluginConfig()).server === IWebServerConfigServer.http) {
       this.HTTPExpress = express();
-      this.log.info("[HTTP] Server ready: {host}:{httpPort}", {
+      await this.log.info("[HTTP] Server ready: {host}:{httpPort}", {
         host: (await this.getPluginConfig()).host,
         httpPort: (await this.getPluginConfig()).httpPort,
       });
@@ -32,7 +32,7 @@ export class Service
       (await this.getPluginConfig()).server === IWebServerConfigServer.https
     ) {
       this.HTTPSExpress = express();
-      this.log.info("[HTTPS] Server ready: {host}:{httpsPort}", {
+      await this.log.info("[HTTPS] Server ready: {host}:{httpsPort}", {
         host: (await this.getPluginConfig()).host,
         httpsPort: (await this.getPluginConfig()).httpsPort,
       });
@@ -48,24 +48,21 @@ export class Service
   }
   public override async run() {
     const self = this;
-    this.log.debug(`loaded`);
     if (
       (await this.getPluginConfig()).server === IWebServerConfigServer.http ||
       (await this.getPluginConfig()).server ===
         IWebServerConfigServer.httpAndHttps
     ) {
-      http
-        .createServer(this.HTTPExpress)
-        .listen(
-          (await this.getPluginConfig()).httpPort,
-          (await this.getPluginConfig()).host,
-          async () =>
-            self.log.info("[HTTP] Listening {host}:{httpPort} for WW!", {
-              host: (await self.getPluginConfig()).host,
-              httpPort: (await self.getPluginConfig()).httpPort,
-            })
-        );
-      this.log.info("[HTTP] Server started {host}:{httpPort}", {
+      http.createServer(this.HTTPExpress).listen(
+        (await this.getPluginConfig()).httpPort,
+        (await this.getPluginConfig()).host,
+        async () =>
+          await self.log.info("[HTTP] Listening {host}:{httpPort} for WW!", {
+            host: (await self.getPluginConfig()).host,
+            httpPort: (await self.getPluginConfig()).httpPort,
+          })
+      );
+      await this.log.info("[HTTP] Server started {host}:{httpPort}", {
         host: (await self.getPluginConfig()).host,
         httpPort: (await self.getPluginConfig()).httpPort,
       });
@@ -83,12 +80,12 @@ export class Service
         ((await this.getPluginConfig()).httpsPort,
         (await this.getPluginConfig()).host,
         async () =>
-          self.log.info("[HTTPS] Listening {host}:{httpsPort}!", {
+          await self.log.info("[HTTPS] Listening {host}:{httpsPort}!", {
             host: (await self.getPluginConfig()).host,
             httpsPort: (await self.getPluginConfig()).httpsPort,
           }))
       );
-      this.log.info("[HTTPS] Server started {host}:{httpsPort}", {
+      await this.log.info("[HTTPS] Server started {host}:{httpsPort}", {
         host: (await self.getPluginConfig()).host,
         httpsPort: (await self.getPluginConfig()).httpsPort,
       });
@@ -106,10 +103,13 @@ export class Service
           }`
         );
       });
-      this.log.info("[HTTP]->[HTTPS] Server redirect: {host}:{httpPort}", {
-        host: (await this.getPluginConfig()).host,
-        httpPort: (await this.getPluginConfig()).httpPort,
-      });
+      await this.log.info(
+        "[HTTP]->[HTTPS] Server redirect: {host}:{httpPort}",
+        {
+          host: (await this.getPluginConfig()).host,
+          httpPort: (await this.getPluginConfig()).httpPort,
+        }
+      );
     }
   }
 
@@ -129,169 +129,169 @@ export class Service
   }
   async use(...handlers: any): Promise<void> {
     let server = await this.getServerToListenTo();
-    this.log.debug(`[${server.type}] initForPlugins [USE]`);
+    await this.log.debug(`[${server.type}] initForPlugins [USE]`);
     server.server.use(handlers);
-    this.log.debug(`[${server.type}] initForPlugins [USE] OKAY`);
+    await this.log.debug(`[${server.type}] initForPlugins [USE] OKAY`);
   }
   async head(path: string, ...handlers: any): Promise<void> {
     let server = await this.getServerToListenTo();
-    this.log.debug(`[${server.type}] initForPlugins [HEAD]${path}`);
+    await this.log.debug(`[${server.type}] initForPlugins [HEAD]${path}`);
     server.server.head(path, handlers);
-    this.log.debug(`[${server.type}] initForPlugins [HEAD] OKAY`);
+    await this.log.debug(`[${server.type}] initForPlugins [HEAD] OKAY`);
   }
   async get(path: string, ...handlers: any): Promise<void> {
     let server = await this.getServerToListenTo();
-    this.log.debug(`[${server.type}] initForPlugins [GET]${path}`);
+    await this.log.debug(`[${server.type}] initForPlugins [GET]${path}`);
     server.server.get(path, handlers);
-    this.log.debug(`[${server.type}] initForPlugins [GET] OKAY`);
+    await this.log.debug(`[${server.type}] initForPlugins [GET] OKAY`);
   }
   async post(path: string, ...handlers: any): Promise<void> {
     let server = await this.getServerToListenTo();
-    this.log.debug(`[${server.type}] initForPlugins [POST]${path}`);
+    await this.log.debug(`[${server.type}] initForPlugins [POST]${path}`);
     server.server.post(path, handlers);
-    this.log.debug(`[${server.type}] initForPlugins [POST] OKAY`);
+    await this.log.debug(`[${server.type}] initForPlugins [POST] OKAY`);
   }
   async put(path: string, ...handlers: any): Promise<void> {
     let server = await this.getServerToListenTo();
-    this.log.debug(`[${server.type}] initForPlugins [PUT]${path}`);
+    await this.log.debug(`[${server.type}] initForPlugins [PUT]${path}`);
     server.server.put(path, handlers);
-    this.log.debug(`[${server.type}] initForPlugins [PUT] OKAY`);
+    await this.log.debug(`[${server.type}] initForPlugins [PUT] OKAY`);
   }
   async delete(path: string, ...handlers: any): Promise<void> {
     let server = await this.getServerToListenTo();
-    this.log.debug(`[${server.type}] initForPlugins [DELETE]${path}`);
+    await this.log.debug(`[${server.type}] initForPlugins [DELETE]${path}`);
     server.server.delete(path, handlers);
-    this.log.debug(`[${server.type}] initForPlugins [DELETE] OKAY`);
+    await this.log.debug(`[${server.type}] initForPlugins [DELETE] OKAY`);
   }
   async patch(path: string, ...handlers: any): Promise<void> {
     let server = await this.getServerToListenTo();
-    this.log.debug(`[${server.type}] initForPlugins [PATCH]${path}`);
+    await this.log.debug(`[${server.type}] initForPlugins [PATCH]${path}`);
     server.server.patch(path, handlers);
-    this.log.debug(`[${server.type}] initForPlugins [PATCH] OKAY`);
+    await this.log.debug(`[${server.type}] initForPlugins [PATCH] OKAY`);
   }
   async options(path: string, ...handlers: any): Promise<void> {
     let server = await this.getServerToListenTo();
-    this.log.debug(`[${server.type}] initForPlugins [OPTIONS]${path}`);
+    await this.log.debug(`[${server.type}] initForPlugins [OPTIONS]${path}`);
     server.server.options(path, handlers);
-    this.log.debug(`[${server.type}] initForPlugins [OPTIONS] OKAY`);
+    await this.log.debug(`[${server.type}] initForPlugins [OPTIONS] OKAY`);
   }
   async all(path: string, ...handlers: any): Promise<void> {
     let server = await this.getServerToListenTo();
-    this.log.debug(`[${server.type}] initForPlugins [ALL]${path}`);
+    await this.log.debug(`[${server.type}] initForPlugins [ALL]${path}`);
     server.server.all(path, handlers);
-    this.log.debug(`[${server.type}] initForPlugins [ALL] OKAY`);
+    await this.log.debug(`[${server.type}] initForPlugins [ALL] OKAY`);
   }
 
   // HTTP ONLY SERVER
   async httpUse(...handlers: any): Promise<void> {
     if (this.HTTPExpress === undefined) throw "HTTP NOT ENABLED";
-    this.log.debug(`[HTTP_ONLY] initForPlugins [USE]`);
+    await this.log.debug(`[HTTP_ONLY] initForPlugins [USE]`);
     this.HTTPExpress.use(handlers);
-    this.log.debug(`[HTTP_ONLY] initForPlugins [USE] OKAY`);
+    await this.log.debug(`[HTTP_ONLY] initForPlugins [USE] OKAY`);
   }
   async httpHead(path: string, ...handlers: any): Promise<void> {
     if (this.HTTPExpress === undefined) throw "HTTP NOT ENABLED";
-    this.log.debug(`[HTTP_ONLY] initForPlugins [HEAD]${path}`);
+    await this.log.debug(`[HTTP_ONLY] initForPlugins [HEAD]${path}`);
     this.HTTPExpress.head(path, handlers);
-    this.log.debug(`[HTTP_ONLY] initForPlugins [HEAD] OKAY`);
+    await this.log.debug(`[HTTP_ONLY] initForPlugins [HEAD] OKAY`);
   }
   async httpGet(path: string, ...handlers: any): Promise<void> {
     if (this.HTTPExpress === undefined) throw "HTTP NOT ENABLED";
-    this.log.debug(`[HTTP_ONLY] initForPlugins [GET]${path}`);
+    await this.log.debug(`[HTTP_ONLY] initForPlugins [GET]${path}`);
     this.HTTPExpress.get(path, handlers);
-    this.log.debug(`[HTTP_ONLY] initForPlugins [GET] OKAY`);
+    await this.log.debug(`[HTTP_ONLY] initForPlugins [GET] OKAY`);
   }
   async httpPost(path: string, ...handlers: any): Promise<void> {
     if (this.HTTPExpress === undefined) throw "HTTP NOT ENABLED";
-    this.log.debug(`[HTTP_ONLY] initForPlugins [POST]${path}`);
+    await this.log.debug(`[HTTP_ONLY] initForPlugins [POST]${path}`);
     this.HTTPExpress.post(path, handlers);
-    this.log.debug(`[HTTP_ONLY] initForPlugins [POST] OKAY`);
+    await this.log.debug(`[HTTP_ONLY] initForPlugins [POST] OKAY`);
   }
   async httpPut(path: string, ...handlers: any): Promise<void> {
     if (this.HTTPExpress === undefined) throw "HTTP NOT ENABLED";
-    this.log.debug(`[HTTP_ONLY] initForPlugins [PUT]${path}`);
+    await this.log.debug(`[HTTP_ONLY] initForPlugins [PUT]${path}`);
     this.HTTPExpress.put(path, handlers);
-    this.log.debug(`[HTTP_ONLY] initForPlugins [PUT] OKAY`);
+    await this.log.debug(`[HTTP_ONLY] initForPlugins [PUT] OKAY`);
   }
   async httpDelete(path: string, ...handlers: any): Promise<void> {
     if (this.HTTPExpress === undefined) throw "HTTP NOT ENABLED";
-    this.log.debug(`[HTTP_ONLY] initForPlugins [DELETE]${path}`);
+    await this.log.debug(`[HTTP_ONLY] initForPlugins [DELETE]${path}`);
     this.HTTPExpress.delete(path, handlers);
-    this.log.debug(`[HTTP_ONLY] initForPlugins [DELETE] OKAY`);
+    await this.log.debug(`[HTTP_ONLY] initForPlugins [DELETE] OKAY`);
   }
   async httpPatch(path: string, ...handlers: any): Promise<void> {
     if (this.HTTPExpress === undefined) throw "HTTP NOT ENABLED";
-    this.log.debug(`[HTTP_ONLY] initForPlugins [PATCH]${path}`);
+    await this.log.debug(`[HTTP_ONLY] initForPlugins [PATCH]${path}`);
     this.HTTPExpress.patch(path, handlers);
-    this.log.debug(`[HTTP_ONLY] initForPlugins [PATCH] OKAY`);
+    await this.log.debug(`[HTTP_ONLY] initForPlugins [PATCH] OKAY`);
   }
   async httpOptions(path: string, ...handlers: any): Promise<void> {
     if (this.HTTPExpress === undefined) throw "HTTP NOT ENABLED";
-    this.log.debug(`[HTTP_ONLY] initForPlugins [OPTIONS]${path}`);
+    await this.log.debug(`[HTTP_ONLY] initForPlugins [OPTIONS]${path}`);
     this.HTTPExpress.options(path, handlers);
-    this.log.debug(`[HTTP_ONLY] initForPlugins [OPTIONS] OKAY`);
+    await this.log.debug(`[HTTP_ONLY] initForPlugins [OPTIONS] OKAY`);
   }
   async httpAll(path: string, ...handlers: any): Promise<void> {
     if (this.HTTPExpress === undefined) throw "HTTP NOT ENABLED";
-    this.log.debug(`[HTTP_ONLY] initForPlugins [ALL]${path}`);
+    await this.log.debug(`[HTTP_ONLY] initForPlugins [ALL]${path}`);
     this.HTTPExpress.all(path, handlers);
-    this.log.debug(`[HTTP_ONLY] initForPlugins [ALL] OKAY`);
+    await this.log.debug(`[HTTP_ONLY] initForPlugins [ALL] OKAY`);
   }
 
   // HTTPS ONLY SERVER
   async httpsUse(...handlers: any): Promise<void> {
     if (this.HTTPSExpress === undefined) throw "HTTPS NOT ENABLED";
-    this.log.debug(`[HTTPS_ONLY] initForPlugins [USE]`);
+    await this.log.debug(`[HTTPS_ONLY] initForPlugins [USE]`);
     this.HTTPSExpress.use(handlers);
-    this.log.debug(`[HTTPS_ONLY] initForPlugins [USE] OKAY`);
+    await this.log.debug(`[HTTPS_ONLY] initForPlugins [USE] OKAY`);
   }
   async httpsHead(path: string, ...handlers: any): Promise<void> {
     if (this.HTTPSExpress === undefined) throw "HTTPS NOT ENABLED";
-    this.log.debug(`[HTTPS_ONLY] initForPlugins [HEAD]${path}`);
+    await this.log.debug(`[HTTPS_ONLY] initForPlugins [HEAD]${path}`);
     this.HTTPSExpress.head(path, handlers);
-    this.log.debug(`[HTTPS_ONLY] initForPlugins [HEAD] OKAY`);
+    await this.log.debug(`[HTTPS_ONLY] initForPlugins [HEAD] OKAY`);
   }
   async httpsGet(path: string, ...handlers: any): Promise<void> {
     if (this.HTTPSExpress === undefined) throw "HTTPS NOT ENABLED";
-    this.log.debug(`[HTTPS_ONLY] initForPlugins [GET]${path}`);
+    await this.log.debug(`[HTTPS_ONLY] initForPlugins [GET]${path}`);
     this.HTTPSExpress.get(path, handlers);
-    this.log.debug(`[HTTPS_ONLY] initForPlugins [GET] OKAY`);
+    await this.log.debug(`[HTTPS_ONLY] initForPlugins [GET] OKAY`);
   }
   async httpsPost(path: string, ...handlers: any): Promise<void> {
     if (this.HTTPSExpress === undefined) throw "HTTPS NOT ENABLED";
-    this.log.debug(`[HTTPS_ONLY] initForPlugins [POST]${path}`);
+    await this.log.debug(`[HTTPS_ONLY] initForPlugins [POST]${path}`);
     this.HTTPSExpress.post(path, handlers);
-    this.log.debug(`[HTTPS_ONLY] initForPlugins [POST] OKAY`);
+    await this.log.debug(`[HTTPS_ONLY] initForPlugins [POST] OKAY`);
   }
   async httpsPut(path: string, ...handlers: any): Promise<void> {
     if (this.HTTPSExpress === undefined) throw "HTTPS NOT ENABLED";
-    this.log.debug(`[HTTPS_ONLY] initForPlugins [PUT]${path}`);
+    await this.log.debug(`[HTTPS_ONLY] initForPlugins [PUT]${path}`);
     this.HTTPSExpress.put(path, handlers);
-    this.log.debug(`[HTTPS_ONLY] initForPlugins [PUT] OKAY`);
+    await this.log.debug(`[HTTPS_ONLY] initForPlugins [PUT] OKAY`);
   }
   async httpsDelete(path: string, ...handlers: any): Promise<void> {
     if (this.HTTPSExpress === undefined) throw "HTTPS NOT ENABLED";
-    this.log.debug(`[HTTPS_ONLY] initForPlugins [DELETE]${path}`);
+    await this.log.debug(`[HTTPS_ONLY] initForPlugins [DELETE]${path}`);
     this.HTTPSExpress.delete(path, handlers);
-    this.log.debug(`[HTTPS_ONLY] initForPlugins [DELETE] OKAY`);
+    await this.log.debug(`[HTTPS_ONLY] initForPlugins [DELETE] OKAY`);
   }
   async httpsPatch(path: string, ...handlers: any): Promise<void> {
     if (this.HTTPSExpress === undefined) throw "HTTPS NOT ENABLED";
-    this.log.debug(`[HTTPS_ONLY] initForPlugins [PATCH]${path}`);
+    await this.log.debug(`[HTTPS_ONLY] initForPlugins [PATCH]${path}`);
     this.HTTPSExpress.patch(path, handlers);
-    this.log.debug(`[HTTPS_ONLY] initForPlugins [PATCH] OKAY`);
+    await this.log.debug(`[HTTPS_ONLY] initForPlugins [PATCH] OKAY`);
   }
   async httpsOptions(path: string, ...handlers: any): Promise<void> {
     if (this.HTTPSExpress === undefined) throw "HTTPS NOT ENABLED";
-    this.log.debug(`[HTTPS_ONLY] initForPlugins [OPTIONS]${path}`);
+    await this.log.debug(`[HTTPS_ONLY] initForPlugins [OPTIONS]${path}`);
     this.HTTPSExpress.options(path, handlers);
-    this.log.debug(`[HTTPS_ONLY] initForPlugins [OPTIONS] OKAY`);
+    await this.log.debug(`[HTTPS_ONLY] initForPlugins [OPTIONS] OKAY`);
   }
   async httpsAll(path: string, ...handlers: any): Promise<void> {
     if (this.HTTPSExpress === undefined) throw "HTTPS NOT ENABLED";
-    this.log.debug(`[HTTPS_ONLY] initForPlugins [ALL]${path}`);
+    await this.log.debug(`[HTTPS_ONLY] initForPlugins [ALL]${path}`);
     this.HTTPSExpress.all(path, handlers);
-    this.log.debug(`[HTTPS_ONLY] initForPlugins [ALL] OKAY`);
+    await this.log.debug(`[HTTPS_ONLY] initForPlugins [ALL] OKAY`);
   }
 }
 
