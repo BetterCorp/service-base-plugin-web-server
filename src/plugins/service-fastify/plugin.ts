@@ -158,7 +158,7 @@ export class Service
       });
     }
     if ((await self.getPluginConfig()).health) {
-      self.get("/health", async (params, query, res, req) => {
+      self.get("/health", async (reply, params, query, req) => {
         let checkResults: IDictionary<boolean> = {};
         for (let key of Object.keys(self.HealthChecks)) {
           checkResults[key] = await Promise.race<boolean>([
@@ -170,8 +170,8 @@ export class Service
             new Promise((resolve) => setTimeout(() => resolve(false), 500)),
           ]);
         }
-        res.header("Content-Type", "application/json");
-        res.code(200).send({
+        reply.header("Content-Type", "application/json");
+        reply.code(200).send({
           requestId: req.id,
           checks: checkResults,
           /*requestIp: {
