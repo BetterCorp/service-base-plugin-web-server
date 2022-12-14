@@ -293,7 +293,7 @@ export class Service
   }
   private getFinalPath(path: string): string {
     let finalPath: string = path;
-    if (finalPath.endsWith("/"))
+    if (finalPath.endsWith("/") && finalPath !== "/")
       finalPath = path.substring(0, finalPath.length - 1);
     return finalPath;
   }
