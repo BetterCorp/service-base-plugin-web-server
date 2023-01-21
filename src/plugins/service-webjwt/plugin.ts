@@ -152,11 +152,12 @@ export class Service extends ServicesBase<
   }
 
   private async signTokenSecretKey(tokenData: any, userId: string) {
+    const tokenLifespanMinutes = (await this.getPluginConfig()).tokenLifespanMinutes;
     return jsonwebtoken.sign(
       tokenData,
       (await this.getPluginConfig()).secretKey,
       {
-        expiresIn: 60 * (await this.getPluginConfig()).tokenLifespanMinutes,
+        expiresIn: tokenLifespanMinutes === null ? undefined : 60 * tokenLifespanMinutes,
         issuer: (
           (await this.getPluginConfig()).options.issuer || this.pluginName
         ).toString(),

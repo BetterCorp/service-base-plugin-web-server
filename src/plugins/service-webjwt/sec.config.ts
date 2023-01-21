@@ -54,7 +54,7 @@ export interface IEJWTPluginConfig {
   authType: IEJWTPluginAuthType; // Auth Type: Type of signing to do
   queryKey: string; // Query Key: For WebServers to use query string auth instead of header auth
   options: VerifyOptions; // Options: Signing options
-  tokenLifespanMinutes: number; // Token Lifespan: Token lifespan in minutes
+  tokenLifespanMinutes: number | null; // Token Lifespan: Token lifespan in minutes
   defaultTokenType: EJWTTokenType; // Default Token Type: The default web server token validation type
   allowedTokenTypes: Array<EJWTTokenType>; // Allowed Token Types: If clients should only use certain types of tokens (header/query etc...)
 }
