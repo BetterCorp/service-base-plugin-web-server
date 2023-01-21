@@ -76,7 +76,7 @@ export class Service extends ServicesBase<
           (await self.getPluginConfig()).options,
           async (err: any, decoded: any) => {
             if (err) {
-              return reject();
+              return reject(err);
             }
             if (
               !Tools.isNullOrUndefined(
