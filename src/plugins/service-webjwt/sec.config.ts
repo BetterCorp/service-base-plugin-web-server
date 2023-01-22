@@ -1,5 +1,6 @@
 import * as bcrypt from "bcrypt";
 import { SecConfig } from "@bettercorp/service-base";
+import { Tools } from "@bettercorp/tools";
 
 export enum EJWTTokenType {
   req = "req",
@@ -47,11 +48,12 @@ export interface VerifyOptions {
   maxAge?: string | number | undefined;
 }
 export interface IEJWTPluginConfig {
-  keyUrl: string; // Key URL: JWT Signing key url
+  privateKey: string | null; // Private Key: Private signing key
+  secretKey: string | null; // Secret Key: Signing secret key
+  keyUrl: string | null; // Key URL: JWT Signing key url
   bearerStr: string; // Bearer String: Changes auth header 'Bearer (token)' value
   authKey: string; // Auth Key: For using secret key signing
-  secretKey: string; // Secret Key: Signing key
-  authType: IEJWTPluginAuthType; // Auth Type: Type of signing to do
+  //authType: IEJWTPluginAuthType; // Auth Type: Type of signing to do
   queryKey: string; // Query Key: For WebServers to use query string auth instead of header auth
   options: VerifyOptions; // Options: Signing options
   tokenLifespanMinutes: number | null; // Token Lifespan: Token lifespan in minutes
@@ -68,7 +70,7 @@ export class Config extends SecConfig<IEJWTPluginConfig> {
       keyUrl:
         existingConfig.keyUrl !== undefined
           ? existingConfig.keyUrl
-          : "/auth/realms/RealmName/protocol/openid-connect/certs",
+          : null, // "/auth/realms/RealmName/protocol/openid-connect/certs",
       bearerStr:
         existingConfig.bearerStr !== undefined
           ? existingConfig.bearerStr
@@ -77,18 +79,24 @@ export class Config extends SecConfig<IEJWTPluginConfig> {
         existingConfig.authKey !== undefined
           ? existingConfig.authKey
           : bcrypt.genSaltSync(8),
+      privateKey:
+        existingConfig.privateKey !== undefined
+          ? existingConfig.privateKey
+          : null,
       secretKey:
         existingConfig.secretKey !== undefined
           ? existingConfig.secretKey
-          : bcrypt.genSaltSync(8),
+          : Tools.isNullOrUndefined(existingConfig.privateKey)
+          ? bcrypt.genSaltSync(8)
+          : null,
       queryKey:
         existingConfig.queryKey !== undefined
           ? existingConfig.queryKey
           : "passtk",
-      authType:
+      /*authType:
         existingConfig.authType !== undefined
           ? existingConfig.authType
-          : IEJWTPluginAuthType.JWTCERTS,
+          : IEJWTPluginAuthType.JWTCERTS,*/
       options: {
         algorithms:
           (existingConfig.options || {}).algorithms !== undefined

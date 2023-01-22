@@ -12,12 +12,13 @@ import {
   IEJWTPluginConfig,
   VerifyOptions,
 } from "../../plugins/service-webjwt/sec.config";
-import {
+import type {
   JwtHeader,
   JwtPayload,
   SigningKeyCallback,
-  verify,
+  SignOptions,
 } from "jsonwebtoken";
+import { verify } from "jsonwebtoken";
 import { JwksClient, Options } from "jwks-rsa";
 
 export class webJwtExpress extends ServicesClient<
@@ -279,30 +280,56 @@ export class webJwt extends ServicesClient<
   public override readonly _pluginName: string = "service-webjwt";
   public override readonly initAfterPlugins: string[] = ["service-webjwt"];
 
-  async validateToken(token: string): Promise<any> {
-    return await this._plugin.emitEventAndReturnTimed(
+  async validateToken(token: string): Promise<any>;
+  async validateToken(
+    token: string,
+    overrideOptions: VerifyOptions
+  ): Promise<any>;
+  async validateToken(
+    token: string,
+    overrideOptions?: VerifyOptions
+  ): Promise<any> {
+    return await this._plugin.emitEventAndReturn(
       "validateToken",
-      1000,
-      token
+      token,
+      overrideOptions
     );
   }
 
-  async validateTokenQuiet(token: string): Promise<any> {
+  async validateTokenQuiet(token: string): Promise<any>;
+  async validateTokenQuiet(
+    token: string,
+    overrideOptions: VerifyOptions
+  ): Promise<any>;
+  async validateTokenQuiet(
+    token: string,
+    overrideOptions?: VerifyOptions
+  ): Promise<any> {
     const self = this;
     return new Promise(async (resolve) =>
       self._plugin
-        .emitEventAndReturnTimed("validateToken", 1000, token)
+        .emitEventAndReturn("validateToken", token, overrideOptions)
         .then(resolve)
         .catch(() => resolve(false))
     );
   }
 
-  async signToken(tokenData: any, userId: string) {
-    return await this._plugin.emitEventAndReturnTimed(
+  async signToken(tokenData: any, userId: string): Promise<string>;
+  async signToken(
+    tokenData: any,
+    userId: string,
+    overrideOptions: SignOptions
+  ): Promise<string>;
+  async signToken(
+    tokenData: any,
+    userId: string,
+    overrideOptions?: SignOptions
+  ): Promise<string> {
+    return await this._plugin.emitEventAndReturn(
       "signToken",
-      1000,
       tokenData,
-      userId
+      userId,
+      overrideOptions
     );
   }
 }
