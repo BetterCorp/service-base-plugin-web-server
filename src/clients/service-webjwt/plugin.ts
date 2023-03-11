@@ -466,7 +466,7 @@ export class webJwtLocal extends ServicesClient<
     return new Promise((resolve) => {
       if (token === undefined) return resolve(false);
       if (token === null) return resolve(false);
-      verify(token, self.getJWTKey, self.TokenConfig, (error, decoded) => {
+      verify(token, (header: JwtHeader, callback: SigningKeyCallback)=>self.getJWTKey(header, callback), self.TokenConfig, (error, decoded) => {
         if (error !== null) return resolve(false);
         if (typeof decoded === "string") return resolve(false);
         if (decoded === undefined) return resolve(false);
