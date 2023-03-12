@@ -463,7 +463,7 @@ export class webJwtLocal extends ServicesClient<
     token?: string | null
   ): Promise<boolean | Token> {
     const self = this;
-    return new Promise((resolve) => {
+    return new Promise(async (resolve) => {
       if (token === undefined) return resolve(false);
       if (token === null) return resolve(false);
       verify(token, (header: JwtHeader, callback: SigningKeyCallback)=>self.getJWTKey(header, callback), self.TokenConfig, (error, decoded) => {

@@ -109,12 +109,13 @@ export class Service extends ServicesBase<
   ): Promise<WJwtPayload> {
     const self = this;
     return new Promise(async (resolve: any, reject: any) => {
+      const publicKey = (await this.getPluginConfig()).publicKey;
       const safeOverrideOptions =
         overrideOptions ?? (await self.getPluginConfig()).options;
       if (externalKey === true) {
         return jsonwebtoken.verify(
           data,
-          (a, b) => {
+          Tools.isString(publicKey) ? publicKey : (a, b) => {
             self.getJWTKey(a, b);
           },
           safeOverrideOptions,

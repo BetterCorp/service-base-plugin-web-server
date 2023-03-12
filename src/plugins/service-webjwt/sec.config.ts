@@ -49,6 +49,7 @@ export interface VerifyOptions {
 }
 export interface IEJWTPluginConfig {
   privateKey: string | null; // Private Key: Private signing key
+  publicKey: string | null; // Public Key: Public signing key
   secretKey: string | null; // Secret Key: Signing secret key
   keyUrl: string | null; // Key URL: JWT Signing key url
   bearerStr: string; // Bearer String: Changes auth header 'Bearer (token)' value
@@ -68,9 +69,7 @@ export class Config extends SecConfig<IEJWTPluginConfig> {
   ): IEJWTPluginConfig {
     return {
       keyUrl:
-        existingConfig.keyUrl !== undefined
-          ? existingConfig.keyUrl
-          : null, // "/auth/realms/RealmName/protocol/openid-connect/certs",
+        existingConfig.keyUrl !== undefined ? existingConfig.keyUrl : null, // "/auth/realms/RealmName/protocol/openid-connect/certs",
       bearerStr:
         existingConfig.bearerStr !== undefined
           ? existingConfig.bearerStr
@@ -82,6 +81,10 @@ export class Config extends SecConfig<IEJWTPluginConfig> {
       privateKey:
         existingConfig.privateKey !== undefined
           ? existingConfig.privateKey
+          : null,
+      publicKey:
+        existingConfig.publicKey !== undefined
+          ? existingConfig.publicKey
           : null,
       secretKey:
         existingConfig.secretKey !== undefined
