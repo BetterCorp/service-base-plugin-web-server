@@ -1,15 +1,13 @@
 import { ServiceCallable, ServicesClient } from "@bettercorp/service-base";
 import * as EXPRESS from "express";
 import { expressCallableMethods } from "../../plugins/service-express/plugin";
-import { IWebServerConfig } from "../../plugins/service-express/sec.config";
 
 export class express extends ServicesClient<
   ServiceCallable,
   ServiceCallable,
   ServiceCallable,
   ServiceCallable,
-  expressCallableMethods,
-  IWebServerConfig
+  expressCallableMethods
 > {
   public override readonly _pluginName: string = "service-express";
   public override readonly initAfterPlugins: string[] = ["service-express"];

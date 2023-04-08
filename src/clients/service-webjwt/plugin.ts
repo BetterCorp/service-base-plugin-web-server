@@ -9,7 +9,6 @@ import { ServicesClient } from "@bettercorp/service-base";
 import { EmitAndReturnableEvents } from "../../plugins/service-webjwt/plugin";
 import {
   EJWTTokenType,
-  IEJWTPluginConfig,
   VerifyOptions,
 } from "../../plugins/service-webjwt/sec.config";
 import type {
@@ -26,8 +25,7 @@ export class webJwtExpress extends ServicesClient<
   ServiceCallable,
   EmitAndReturnableEvents,
   ServiceCallable,
-  ServiceCallable,
-  IEJWTPluginConfig
+  ServiceCallable
 > {
   public override readonly _pluginName: string = "service-webjwt";
   public override readonly initAfterPlugins: string[] = [
@@ -150,8 +148,7 @@ export class webJwtFastify extends ServicesClient<
   ServiceCallable,
   EmitAndReturnableEvents,
   ServiceCallable,
-  ServiceCallable,
-  IEJWTPluginConfig
+  ServiceCallable
 > {
   public override readonly _pluginName: string = "service-webjwt";
   public override readonly initAfterPlugins: string[] = [
@@ -274,8 +271,7 @@ export class webJwt extends ServicesClient<
   ServiceCallable,
   EmitAndReturnableEvents,
   ServiceCallable,
-  ServiceCallable,
-  IEJWTPluginConfig
+  ServiceCallable
 > {
   public override readonly _pluginName: string = "service-webjwt";
   public override readonly initAfterPlugins: string[] = ["service-webjwt"];
@@ -339,8 +335,7 @@ export class webJwtLocal extends ServicesClient<
   ServiceCallable,
   ServiceCallable,
   ServiceCallable,
-  ServiceCallable,
-  IEJWTPluginConfig
+  ServiceCallable
 > {
   public override readonly _pluginName: string = "service-webjwt";
   private RequestConfig!: {

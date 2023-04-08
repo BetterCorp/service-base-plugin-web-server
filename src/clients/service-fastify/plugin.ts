@@ -11,7 +11,6 @@ import {
   FastifyNoBodyRequestHandler,
   FastifyRequestHandler,
 } from "../../plugins/service-fastify/lib";
-import { FastifyWebServerConfig } from "../../plugins/service-fastify/sec.config";
 import { fastifyCallableMethods } from "../../plugins/service-fastify/plugin";
 
 export class fastify extends ServicesClient<
@@ -19,8 +18,7 @@ export class fastify extends ServicesClient<
   ServiceCallable,
   ServiceCallable,
   ServiceCallable,
-  fastifyCallableMethods,
-  FastifyWebServerConfig
+  fastifyCallableMethods
 > {
   async addHealthCheck(
     checkName: string,
