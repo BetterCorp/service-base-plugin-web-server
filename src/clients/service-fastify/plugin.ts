@@ -1,4 +1,4 @@
-import { ServiceCallable, ServicesClient } from "@bettercorp/service-base";
+import { ServiceCallable, ServicesBase, ServicesClient } from "@bettercorp/service-base";
 import {
   FastifyPluginAsync,
   FastifyPluginCallback,
@@ -20,6 +20,9 @@ export class fastify extends ServicesClient<
   ServiceCallable,
   fastifyCallableMethods
 > {
+  constructor(self: ServicesBase) {
+    super(self);
+  }
   async addHealthCheck(
     checkName: string,
     handler: () => Promise<boolean>

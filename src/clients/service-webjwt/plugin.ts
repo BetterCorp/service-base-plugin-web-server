@@ -27,6 +27,9 @@ export class webJwtExpress extends ServicesClient<
   ServiceCallable,
   ServiceCallable
 > {
+  constructor(self: ServicesBase) {
+    super(self);
+  }
   public override readonly _pluginName: string = "service-webjwt";
   public override readonly initAfterPlugins: string[] = [
     "service-express",
@@ -150,6 +153,9 @@ export class webJwtFastify extends ServicesClient<
   ServiceCallable,
   ServiceCallable
 > {
+  constructor(self: ServicesBase) {
+    super(self);
+  }
   public override readonly _pluginName: string = "service-webjwt";
   public override readonly initAfterPlugins: string[] = [
     "service-fastify",
@@ -273,6 +279,9 @@ export class webJwt extends ServicesClient<
   ServiceCallable,
   ServiceCallable
 > {
+  constructor(self: ServicesBase) {
+    super(self);
+  }
   public override readonly _pluginName: string = "service-webjwt";
   public override readonly initAfterPlugins: string[] = ["service-webjwt"];
 

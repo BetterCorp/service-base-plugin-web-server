@@ -1,4 +1,4 @@
-import { ServiceCallable, ServicesClient } from "@bettercorp/service-base";
+import { ServiceCallable, ServicesBase, ServicesClient } from "@bettercorp/service-base";
 import * as EXPRESS from "express";
 import { expressCallableMethods } from "../../plugins/service-express/plugin";
 
@@ -9,6 +9,9 @@ export class express extends ServicesClient<
   ServiceCallable,
   expressCallableMethods
 > {
+  constructor(self: ServicesBase) {
+    super(self);
+  }
   public override readonly _pluginName: string = "service-express";
   public override readonly initAfterPlugins: string[] = ["service-express"];
   public override readonly runBeforePlugins: string[] = ["service-express"];
