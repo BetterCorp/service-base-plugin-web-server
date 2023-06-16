@@ -1,17 +1,27 @@
-import { ServiceCallable, ServicesBase, ServicesClient } from "@bettercorp/service-base";
 import {
+  ServiceCallable,
+  ServicesBase,
+  ServicesClient,
+} from "@bettercorp/service-base";
+import {
+  FastifyInstance,
   FastifyPluginAsync,
   FastifyPluginCallback,
   FastifyPluginOptions,
   FastifyRegisterOptions,
+  FastifyReply,
+  FastifyRequest,
   FastifyTypeProviderDefault,
   RawServerDefault,
+  RouteShorthandOptions,
 } from "fastify";
 import {
   FastifyNoBodyRequestHandler,
   FastifyRequestHandler,
 } from "../../plugins/service-fastify/lib";
 import { fastifyCallableMethods } from "../../plugins/service-fastify/plugin";
+import { Server as HServer } from "http";
+import { Server as HSServer } from "https";
 
 export class fastify extends ServicesClient<
   ServiceCallable,
@@ -68,6 +78,13 @@ export class fastify extends ServicesClient<
   ): Promise<void> {
     await this._plugin.callPluginMethod("register", plugin, opts);
   }
+
+  public async getServer(): Promise<
+    FastifyInstance<HServer | HSServer>
+  > {
+    return await this._plugin.callPluginMethod("getServerInstance");
+  }
+
   public async head<Path extends string>(
     path: Path,
     handler: FastifyNoBodyRequestHandler<Path>
@@ -79,6 +96,20 @@ export class fastify extends ServicesClient<
     handler: FastifyNoBodyRequestHandler<Path>
   ): Promise<void> {
     await this._plugin.callPluginMethod("get", path, handler as any);
+  }
+  public async getCustom<
+    Path extends string,
+    Opts extends RouteShorthandOptions = any,
+    Handler extends Function = {
+      (request: FastifyRequest, reply: FastifyReply): Promise<void>;
+    }
+  >(path: Path, opts: Opts, handler: Handler): Promise<void> {
+    await this._plugin.callPluginMethod(
+      "getCustom",
+      path,
+      opts,
+      handler as any
+    );
   }
   public async post<Path extends string>(
     path: Path,

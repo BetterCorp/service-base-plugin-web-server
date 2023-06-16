@@ -11,6 +11,9 @@ import {
   FastifyPluginCallback,
   FastifyPluginOptions,
   FastifyRegisterOptions,
+  FastifyReply,
+  FastifyRequest,
+  RouteShorthandOptions,
 } from "fastify";
 import fastifyBsbLogger from "./logger";
 import fastifyCors from "@fastify/cors";
@@ -24,6 +27,7 @@ import { FastifyWebServerConfig, IWebServerConfigServer } from "./sec.config";
 import { IDictionary } from "@bettercorp/tools/lib/Interfaces";
 
 export interface fastifyCallableMethods {
+  getServerInstance(): Promise<FastifyInstance<HServer | HSServer>>;
   addHealthCheck(
     pluginName: string,
     checkName: string,
@@ -44,6 +48,17 @@ export interface fastifyCallableMethods {
   get<Path extends string>(
     path: Path,
     handler: FastifyNoBodyRequestHandler<Path>
+  ): Promise<void>;
+  getCustom<
+    Path extends string,
+    Opts extends RouteShorthandOptions = any,
+    Handler extends Function = {
+      (request: FastifyRequest, reply: FastifyReply): Promise<void>;
+    }
+  >(
+    path: Path,
+    opts: Opts,
+    handler: Handler
   ): Promise<void>;
   post<Path extends string>(
     path: Path,
@@ -325,6 +340,24 @@ export class Service
       this.getFinalPath(path),
       async (req, reply) =>
         await handler(reply, req.params as any, req.query, req)
+    );
+    await this.log.debug(`[${server.type}] initForPlugins [GET] OKAY`);
+  }
+  public async getCustom<
+    Path extends string,
+    Opts extends RouteShorthandOptions = any,
+    Handler extends Function = {
+      (request: FastifyRequest, reply: FastifyReply): Promise<void>;
+    }
+  >(path: Path, opts: Opts, handler: Handler): Promise<void> {
+    let server = await this.getServerToListenTo();
+    await this.log.debug(
+      `[${server.type}] initForPlugins [GET CUSTOM]${this.getFinalPath(path)}`
+    );
+    server.server.get(
+      this.getFinalPath(path),
+      opts,
+      async (a, b) => await handler(a, b)
     );
     await this.log.debug(`[${server.type}] initForPlugins [GET] OKAY`);
   }
