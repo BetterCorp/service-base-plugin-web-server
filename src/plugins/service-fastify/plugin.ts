@@ -165,11 +165,11 @@ export class Service
         (await self.getPluginConfig()).rateLimit.options
       );
     }
-    if ((await self.getPluginConfig()).ipRewrite) {
+    if ((await self.getPluginConfig()).ipRewrite.enabled) {
       await self.log.info(`Enabled IP Service`);
       self.register(fastifyIP, {
-        cloudflareWarpTraefikPlugin: (await self.getPluginConfig())
-          .usingCloudflareWarpTraefikPlugin,
+        log: self.log,
+        ...(await self.getPluginConfig()).ipRewrite
       });
     }
     if ((await self.getPluginConfig()).health) {

@@ -39,12 +39,17 @@ export interface FastifyRateLimit {
   enabled: boolean; // Enabled: If rate limiting is enabled
   options: RateLimitOptions;
 }
+export interface IPReWrite {
+  enabled: boolean; // Enabled: If IP rewriting is enabled
+  usingCloudflareWarpTraefikPlugin: boolean; // CloudflareWARP Traefik plugin: github.com/BetterCorp/cloudflarewarp is in front of this service
+  trustedIPs: Array<string>; // Trusted Proxies: List of trusted proxy ips (x.x.x.x/x or x.x.x.x) (IPv4/IPv6)
+  acceptedHeaders: Array<string>; // Accepted Headers: List of accepted headers to check for the IP
+}
 export interface FastifyWebServerConfig {
   health: boolean; // Enable /health endpoint: Used to monitoring
-  usingCloudflareWarpTraefikPlugin: boolean; // CloudflareWARP Traefik plugin: github.com/BetterCorp/cloudflarewarp is in front of this service
   cors: FastifyCors;
   rateLimit: FastifyRateLimit;
-  ipRewrite: boolean; // Rewrite the IP: For Cloudflare and proxies
+  ipRewrite: IPReWrite; // Rewrite the IP: For proxies
   host: string; // Host: 127.0.0.1/0.0.0 type host definition
   server: IWebServerConfigServer; // Server Type: HTTP/HTTPS or both
   httpPort: number; // HTTP Server Port: If using the HTTP server, the port to bind to
@@ -62,18 +67,31 @@ export class Config extends SecConfig<FastifyWebServerConfig> {
     return {
       health:
         existingConfig.health !== undefined ? existingConfig.health : false,
-      usingCloudflareWarpTraefikPlugin:
-        existingConfig.usingCloudflareWarpTraefikPlugin !== undefined
-          ? existingConfig.usingCloudflareWarpTraefikPlugin
-          : false,
       host: existingConfig.host !== undefined ? existingConfig.host : "0.0.0.0",
       httpPort:
         existingConfig.httpPort !== undefined ? existingConfig.httpPort : 80,
-      ipRewrite:
-        existingConfig.usingCloudflareWarpTraefikPlugin === true ||
-        existingConfig.ipRewrite !== undefined
-          ? existingConfig.ipRewrite
-          : true,
+      ipRewrite: {
+        enabled:
+          existingConfig.ipRewrite === undefined
+            ? false
+            : existingConfig.ipRewrite.enabled ?? false,
+        usingCloudflareWarpTraefikPlugin:
+          existingConfig.ipRewrite === undefined
+            ? false
+            : existingConfig.ipRewrite.usingCloudflareWarpTraefikPlugin ??
+              false,
+        trustedIPs:
+          existingConfig.ipRewrite === undefined
+            ? []
+            : existingConfig.ipRewrite.trustedIPs ?? [],
+        acceptedHeaders:
+          existingConfig.ipRewrite === undefined
+            ? ["cf-connecting-ip", "x-forwarded-for"]
+            : existingConfig.ipRewrite.acceptedHeaders.map(x=>x.toLowerCase()) ?? [
+                "cf-connecting-ip",
+                "x-forwarded-for",
+              ],
+      },
       server:
         existingConfig.server !== undefined
           ? existingConfig.server
